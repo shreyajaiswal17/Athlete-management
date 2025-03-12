@@ -1,13 +1,10 @@
-import express from 'express' ;
+import dotenv from "dotenv"
 
-const app = express();
+import connectDB from './db/db.js';
 
-app.get('/', (req, res) =>{
-    res.send("server is ready");
-});
 
-const port = process.env.PORT || 3000;
-
-app.listen(port, ()=>{
-    console.log(`Serve at http://localhost:${port}`)
+dotenv.config({
+    path : './env'
 })
+
+connectDB()
