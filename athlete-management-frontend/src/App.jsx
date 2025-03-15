@@ -1,14 +1,13 @@
-import { useState } from 'react'
+import React from 'react';
+import CreateAthlete from './CreateAthlete';
 
-import AthleteDetailPage from './AthleteDetailPage'
 function App() {
- 
-
   return (
-    <>
-     <AthleteDetailPage/>
-    </>
-  )
+    <div className="App">
+      <h1>Athlete Management</h1>
+      <CreateAthlete />
+    </div>
+  );
 }
 
-export default App
+export default App;
