@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const AuthForm = ({ onLogin }) => {
+const AuthForm = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: "",
@@ -26,56 +26,25 @@ const AuthForm = ({ onLogin }) => {
 
     try {
       const endpoint = isLogin
-        ? `${import.meta.env.VITE_BACKEND_URL}/login`
-        : `${import.meta.env.VITE_BACKEND_URL}/signup`;
+        ? `${import.meta.env.VITE_BACKEND_URL}/auth/login`
+        : `${import.meta.env.VITE_BACKEND_URL}/auth/signup`;
 
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : { username: formData.username, email: formData.email, password: formData.password };
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      // Redirect to Auth0 for login
+      window.location.href = `https://dev-6qk83ogv0ykpxkkr.us.auth0.com/login?redirect_uri=${window.location.origin}/login`;
+      return;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
-
-      if (isLogin) {
-        localStorage.setItem("token", data.accessToken);
-        console.log("Access Token:", data.accessToken);
-
-        onLogin();
-        navigate('/home');
-
-        const addSenderResponse = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/add-verified-sender`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${data.accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const addSenderData = await addSenderResponse.json();
-
-        if (addSenderResponse.ok) {
-          console.log("Sender added:", addSenderData);
-        } else {
-          console.error("Failed to add sender:", addSenderData);
-        }
-      } else {
-        setSuccess("Account created successfully! Please log in.");
-      }
     } catch (error) {
       setError(error.message);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    const googleLoginUrl = `https://dev-6qk83ogv0ykpxkkr.us.auth0.com/login?redirect_uri=${window.location.origin}/login&connection=google-oauth2`;
+    window.location.href = googleLoginUrl;
   };
 
   return (
@@ -83,7 +52,7 @@ const AuthForm = ({ onLogin }) => {
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-indigo-700 mb-2">
-            Welcome to MegaMailer
+            Welcome to Athlete Management Forum
           </h1>
           <p className="text-gray-600">
             {isLogin ? "Sign in to your account" : "Create your account"}
@@ -147,8 +116,14 @@ const AuthForm = ({ onLogin }) => {
 
         <div className="mt-6 text-center">
           <button
+            onClick={handleGoogleLogin}
+            className="w-full bg-red-500 text-white font-bold py-3 px-6 rounded-lg"
+          >
+            Sign in with Google
+          </button>
+          <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-indigo-600 hover:text-indigo-800 font-medium"
+            className="text-indigo-600 hover:text-indigo-800 font-medium mt-4"
           >
             {isLogin
               ? "Don't have an account? Sign up"
