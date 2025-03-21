@@ -33,8 +33,10 @@ const trainInjuryModel = async () => {
   }
 };
 
-// Train model at startup
 trainInjuryModel();
+
+// Add this line to export the router as default
+
 
 // GET /api/athlete/injury-prediction - Fetch injury predictions
 router.get('/injury-prediction/:id', async (req, res) => {
@@ -64,3 +66,4 @@ router.get('/injury-prediction/:id', async (req, res) => {
       res.status(500).json({ error: 'Server error' });
     }
   });
+  export default router;

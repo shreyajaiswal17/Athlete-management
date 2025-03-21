@@ -1,37 +1,38 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import AthleteDetailPage from './AthleteDetailPage'; // Importing AthleteDetailPage
+// athlete-management-frontend/src/App.jsx
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Login from './Login.jsx'
+import Dashboard from './Dashboard.jsx'
+import AthleteDetailPage from './AthleteDetailPage.jsx'
+import CreateAthlete from './CreateAthlete.jsx'
+import Home from './Home.jsx'
+import { useAuth0 } from '@auth0/auth0-react'
 
-import AuthForm from './Login'; // Corrected to use AuthForm
+function App() {
+  const { isAuthenticated } = useAuth0()
 
-import CreateAthlete from './CreateAthlete';
-import {useAuth0} from '@auth0/auth0-react';
-import Dashboard from './Dashboard';
-import WeeklyPerformanceForm from './WeeklyPerformanceForm';
-const App = () => {
-  const {user,loginWithRedirect,isAuthenticated, logout} = useAuth0();
-  console.log("Current User", user)
   return (
-    <>
-    {isAuthenticated ? <button onClick={(e) => logout()}>Logout</button> : <button onClick={(e) => loginWithRedirect()}>Login</button>}
-    {isAuthenticated && <h3> Hello {user.name}</h3>}
-    <Router>
+    <div className="App">
       <Routes>
-        <Route path="/athlete-detail/:id" element={<AthleteDetailPage />} /> {/* Route for athlete detail page */}
+        <Route path="/" element={<Home />} />
+        <Route 
+          path="/login" 
+          element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} 
+        />
+        <Route 
+          path="/dashboard" 
+          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/athlete/:id" 
+          element={isAuthenticated ? <AthleteDetailPage /> : <Navigate to="/login" />} 
+        />
+        <Route 
+          path="/create-athlete" 
+          element={isAuthenticated ? <CreateAthlete /> : <Navigate to="/login" />} 
+        />
+      </Routes>
+    </div>
+  )
+}
 
-<Route path="/" element={<AuthForm />} /> 
-        <Route path="/login" element={<AuthForm />} /> {/* Updated to use element prop */}
-
-   
-        <Route path="/create-athlete" element={<CreateAthlete />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/weeklyperformance" element={<WeeklyPerformanceForm/>} />
-
-        {/* Add other routes as needed */}
-        </Routes>
-    </Router>
-    </>
-  );
-};
-
-export default App;
+export default App

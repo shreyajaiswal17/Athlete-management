@@ -188,5 +188,27 @@ router.get('/performance/:id', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// GET /api/athlete/data - Fetch recent performance data
+router.get('/data', async (req, res) => {
+  try {
+    const data = await AthleteData.find().sort({ timestamp: -1 }).limit(10);
+    const enrichedData = await Promise.all(data.map(async (d) => {
+      const athlete = await Athlete.findById(d.athleteId);
+      const input = [
+        d.hoursTrained,
+        d.sessionsPerWeek,
+        d.pastInjuries,
+        d.restDays,
+        athlete?.age || 0
+      ];
+      const riskFlag = predictRiskFlag(input);
+      return { ...d._doc, riskFlag, athleteName: athlete?.name };
+    }));
+    res.status(200).json(enrichedData);
+  } catch (error) {
+    console.error('Error fetching athlete data:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 export default router;
