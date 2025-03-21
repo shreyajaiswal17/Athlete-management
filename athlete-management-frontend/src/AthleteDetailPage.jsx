@@ -101,6 +101,10 @@ function AthleteDetailPage() {
     ],
   };
 
+  const handleUpdatePerformance = () => {
+    navigate(`/weekly-performance/${id}`);
+  };
+
   if (!athleteData && !error) {
     return <div>Loading...</div>;
   }
@@ -177,9 +181,14 @@ function AthleteDetailPage() {
         <p>Get AI-driven insights and predictions (coming soon).</p>
       </section>
 
-      <button onClick={() => navigate('/dashboard')} className="back-btn">
-        Back to Dashboard
-      </button>
+      <div className="button-container">
+        <button onClick={() => navigate('/dashboard')} className="back-btn">
+          Back to Dashboard
+        </button>
+        <button onClick={handleUpdatePerformance} className="update-performance-btn">
+          Update Weekly Performance
+        </button>
+      </div>
     </div>
   );
 }

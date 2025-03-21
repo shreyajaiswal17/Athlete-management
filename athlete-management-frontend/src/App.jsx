@@ -6,7 +6,7 @@ import AthleteDetailPage from './AthleteDetailPage.jsx'
 import CreateAthlete from './CreateAthlete.jsx'
 import Home from './Home.jsx'
 import { useAuth0 } from '@auth0/auth0-react'
-
+import PerformanceUpdateForm from './PerformanceUpdateForm.jsx'
 function App() {
   const { isAuthenticated } = useAuth0()
 
@@ -26,6 +26,7 @@ function App() {
           path="/athlete/:id" 
           element={isAuthenticated ? <AthleteDetailPage /> : <Navigate to="/login" />} 
         />
+        <Route path="/performanceupdate/:athleteId" element={<PerformanceUpdateForm />} />
         <Route 
           path="/create-athlete" 
           element={isAuthenticated ? <CreateAthlete /> : <Navigate to="/login" />} 
