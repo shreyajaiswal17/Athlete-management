@@ -1,7 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Route,Routes} from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import AthleteDetailPage from './AthleteDetailPage'; // Importing AthleteDetailPage
+
 import AuthForm from './Login'; // Corrected to use AuthForm
-import AthleteDetailPage from './AthleteDetailPage';
+
 import CreateAthlete from './CreateAthlete';
 import {useAuth0} from '@auth0/auth0-react';
 import Dashboard from './Dashboard';
@@ -14,12 +16,13 @@ const App = () => {
     {isAuthenticated ? <button onClick={(e) => logout()}>Logout</button> : <button onClick={(e) => loginWithRedirect()}>Login</button>}
     {isAuthenticated && <h3> Hello {user.name}</h3>}
     <Router>
-<Routes>
+      <Routes>
+        <Route path="/athlete-detail/:id" element={<AthleteDetailPage />} /> {/* Route for athlete detail page */}
+
 <Route path="/" element={<AuthForm />} /> 
         <Route path="/login" element={<AuthForm />} /> {/* Updated to use element prop */}
 
-        <Route path="/athlete-detail" element={<AthleteDetailPage />} />
-
+   
         <Route path="/create-athlete" element={<CreateAthlete />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/weeklyperformance" element={<WeeklyPerformanceForm/>} />

@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import connectDB from './db.js';
 import athleteRoutes from './routes/athleteRoutes.js';
+import injuryPredictionRoutes from './routes/injuryPredictionRoutes.js';
+
 
 
 const app = express();
@@ -14,8 +16,9 @@ app.use(express.urlencoded({ extended: true }));
 // MongoDB Connection
 connectDB();
 
-// Route Mounts
 app.use('/api/athlete', athleteRoutes);         // Athlete-related routes (creation, list)
+app.use('/api/athlete', injuryPredictionRoutes); // Injury prediction routes
+
 
 
 // Server Start

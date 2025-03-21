@@ -158,16 +158,13 @@ router.post('/log-performance', async (req, res) => {
   }
 });
 
-// GET /api/athlete/data - Fetch recent performance data
-router.get('/data', async (req, res) => {
+router.get('/performance/:id', async (req, res) => {
+
   try {
-    const data = await AthleteData.find().sort({ timestamp: -1 }).limit(10).populate('athleteId', 'name sport gender age');
-    console.log("data",data);
+    const data = await AthleteData.find({ athleteId: req.params.id }).sort({ timestamp: -1 }).populate('athleteId', 'name sport gender age');
+
     const enrichedData = data.map((d) => {
       const athlete = d.athleteId; // Populated athlete document
-      const Athletename= d.name;
-      console.log(" athlete name:", Athletename);
-      console.log("Populated athlete:", athlete);
       const input = [
         d.hoursTrained,
         d.sessionsPerWeek,
@@ -185,7 +182,7 @@ router.get('/data', async (req, res) => {
         sport: athlete?.sport || d.sportType || 'Unknown'
       };
     });
-    res.status(200).json(enrichedData);
+    res.status(200).json({ performanceData: enrichedData });
   } catch (error) {
     console.error('Error fetching athlete data:', error);
     res.status(500).json({ error: 'Server error' });
