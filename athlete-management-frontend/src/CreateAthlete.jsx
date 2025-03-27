@@ -105,7 +105,7 @@ function CreateAthlete() {
         {/* Age, Gender, Location */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <div>
-            <label className="block text-lg text-gray-300"> Age</label>
+            <label className="block text-lg text-gray-300">Age</label>
             <input
               type="number"
               name="age"
