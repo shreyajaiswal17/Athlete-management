@@ -1,47 +1,45 @@
-// athlete-management-frontend/src/Dashboard.jsx
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate,useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
-// Sample data as fallback - in real app, this comes from backend
+// Fallback data - aligned with backend schema
 const fallbackAthletes = [
-  { id: 1, name: 'John Doe', sportType: 'Basketball' }, // Changed to sportType
-  { id: 2, name: 'Jane Smith', sportType: 'Swimming' },
-  { id: 3, name: 'Mike Johnson', sportType: 'Track' },
+  { athleteId: '1', athleteName: 'John Doe', sport: 'Basketball', riskFlag: 'Low' },
+  { athleteId: '2', athleteName: 'Jane Smith', sport: 'Swimming', riskFlag: 'Low' },
+  { athleteId: '3', athleteName: 'Mike Johnson', sport: 'Track', riskFlag: 'Low' },
 ];
 
 const Dashboard = () => {
   const [athleteData, setAthleteData] = useState([]);
-  const [riskFlag, setRiskFlag] = useState('');
   const { logout, user } = useAuth0();
   const navigate = useNavigate();
+  const location = useLocation(); // Add this to detect navigation
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/athlete/data');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log('Raw Fetched Data:', JSON.stringify(data, null, 2));
+      setAthleteData(data);
+    } catch (error) {
+      console.error('Error fetching athlete data:', error);
+      setAthleteData(fallbackAthletes.map(athlete => ({
+        athleteId: athlete.athleteId,
+        athleteName: athlete.athleteName,
+        sport: athlete.sport,
+        riskFlag: athlete.riskFlag,
+        hoursTrained: 0,
+        sessionsPerWeek: 0,
+        restDays: 0,
+        timestamp: new Date().toISOString()
+      })));
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/athlete/data');
-        const data = await response.json();
-        console.log('Dashboard Response:', response);
-        console.log('Fetched Athlete Data:', data);
-        // Log sportType for each athlete
-        data.forEach((athlete, index) => console.log(`Athlete ${index} sportType:`, athlete.sportType));
-        setAthleteData(data);
-        if (data.length > 0) setRiskFlag(data[0].riskFlag);
-      } catch (error) {
-        console.error('Error fetching athlete data:', error);
-        setAthleteData(fallbackAthletes.map(athlete => ({
-          _id: athlete.id,
-          athleteId: athlete.id,
-          athleteName: athlete.name,
-          sportType: athlete.sportType, // Use sportType in fallback
-          riskFlag: 'Low',
-          hoursTrained: 0,
-          sessionsPerWeek: 0
-        })));
-      }
-    };
-    fetchData();
-  }, []);
+    fetchData(); // Fetch data on mount and when location changes
+  }, [location]); // Re-run when location changes (e.g., after navigation)
 
   return (
     <div className="dashboard-container">
@@ -66,30 +64,41 @@ const Dashboard = () => {
       </div>
 
       <div className="athlete-list">
-        {athleteData.map((data) => (
-          <Link
-            key={data.athleteId || data._id} // Fallback to _id if athleteId is missing
-            to={`/athlete/${data.athleteId || data._id}`} // Use athleteId or _id
-            className="athlete-card"
-          >
-            <h3>{data.athleteName || 'Unknown Athlete'}</h3>
-            <p>Sport: {data.sportType || 'Not specified'}</p> {/* Use sportType */}
-            <div className={`alert ${data.riskFlag?.toLowerCase().replace(/\s+/g, '-') || 'low'}`}>
-              Risk: {data.riskFlag || 'Low'}
-            </div>
-          </Link>
-        ))}
+        {athleteData.length === 0 ? (
+          <p>No athlete data available</p>
+        ) : (
+          athleteData.map((data) => (
+            <Link
+              key={data.athleteId} // Use athleteId consistently
+              to={`/athlete/${data.athleteId}`} // Navigate using athleteId
+              className="athlete-card"
+            >
+              <h3>{data.athleteName || 'Unknown Athlete'}</h3>
+              <p>Sport: {data.sport || 'Not specified'}</p> {/* Changed to sport */}
+              <div className={`alert ${data.riskFlag ? 'high' : 'low'}`}>
+                Risk: {data.riskFlag ? 'High' : 'Low'} {/* Simplified display */}
+              </div>
+            </Link>
+          ))
+        )}
       </div>
 
       <div className="performance-logs">
         <h2>Recent Performance Logs</h2>
-        <ul>
-          {athleteData.map((data) => (
-            <li key={data._id}>
-              {data.athleteName || 'Unknown Athlete'} - Hours: {data.hoursTrained || 0}, Sessions: {data.sessionsPerWeek || 0}
-            </li>
-          ))}
-        </ul>
+        {athleteData.length === 0 ? (
+          <p>No recent performance logs</p>
+        ) : (
+          <ul>
+            {athleteData.map((data) => (
+              <li key={data._id || data.athleteId}> {/* Fallback to athleteId */}
+                {data.athleteName || 'Unknown Athlete'} - 
+                Hours: {data.hoursTrained || 0}, 
+                Sessions: {data.sessionsPerWeek || 0}, 
+                Rest Days: {data.restDays || 0}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
