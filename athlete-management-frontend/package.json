@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
-    "@tailwindcss/vite": "^4.0.13",
+    "@tailwindcss/vite": "^4.0.17",
     "@tensorflow/tfjs": "^4.22.0",
     "chart.js": "^4.4.8",
     "dotenv": "^16.4.7",
@@ -32,7 +32,7 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.0.13",
+    "tailwindcss": "^4.0.17",
     "vite": "^6.2.0"
   }
 }
