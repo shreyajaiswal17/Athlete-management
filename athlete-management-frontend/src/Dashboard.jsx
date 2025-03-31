@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 
-// Fallback data - aligned with backend schema
+// Fallback data - aligned with backend schema, updated for exertion
 const fallbackAthletes = [
-  { athleteId: '1', athleteName: 'John Doe', sport: 'Basketball', riskFlag: 'Low' },
-  { athleteId: '2', athleteName: 'Jane Smith', sport: 'Swimming', riskFlag: 'Low' },
-  { athleteId: '3', athleteName: 'Mike Johnson', sport: 'Track', riskFlag: 'Low' },
+  { athleteId: '1', athleteName: 'John Doe', sport: 'Basketball', exertionCategory: 'Low', exertionLevel: 20 },
+  { athleteId: '2', athleteName: 'Jane Smith', sport: 'Swimming', exertionCategory: 'Low', exertionLevel: 25 },
+  { athleteId: '3', athleteName: 'Mike Johnson', sport: 'Track', exertionCategory: 'Low', exertionLevel: 15 },
 ];
 
 const Dashboard = () => {
@@ -17,12 +17,36 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/athlete/data');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      // Fetch basic athlete data
+      const athleteResponse = await fetch('http://localhost:3000/api/athlete/data');
+      if (!athleteResponse.ok) throw new Error(`HTTP error! status: ${athleteResponse.status}`);
+      const athleteDataRaw = await athleteResponse.json();
+      console.log('Raw Athlete Data:', JSON.stringify(athleteDataRaw, null, 2));
 
-      const data = await response.json();
-      console.log('Raw Fetched Data:', JSON.stringify(data, null, 2));
-      setAthleteData(data);
+      // Fetch injury predictions and exertion levels for each athlete
+      const updatedAthleteData = await Promise.all(
+        athleteDataRaw.map(async (athlete) => {
+          try {
+            const injuryResponse = await fetch(`http://localhost:3000/api/athlete/injury-prediction/${athlete.athleteId}`);
+            if (!injuryResponse.ok) throw new Error(`Injury fetch error! status: ${injuryResponse.status}`);
+            const injuryData = await injuryResponse.json();
+            const injuryPrediction = injuryData.injuryPrediction || {};
+            return {
+              ...athlete,
+              exertionCategory: injuryPrediction.exertionCategory || athlete.exertionCategory || 'Low', // Prioritize injury prediction
+              exertionLevel: injuryPrediction.exertionLevel || athlete.exertionLevel || 0,
+            };
+          } catch (err) {
+            console.error(`Error fetching injury prediction for ${athlete.athleteId}:`, err);
+            return {
+              ...athlete,
+              exertionCategory: athlete.exertionCategory || 'Low', // Fallback to stored or default
+              exertionLevel: athlete.exertionLevel || 0,
+            };
+          }
+        })
+      );
+      setAthleteData(updatedAthleteData);
     } catch (error) {
       console.error('Error fetching athlete data:', error);
       setAthleteData(
@@ -30,7 +54,8 @@ const Dashboard = () => {
           athleteId: athlete.athleteId,
           athleteName: athlete.athleteName,
           sport: athlete.sport,
-          riskFlag: athlete.riskFlag,
+          exertionCategory: athlete.exertionCategory,
+          exertionLevel: athlete.exertionLevel,
           hoursTrained: 0,
           sessionsPerWeek: 0,
           restDays: 0,
@@ -42,7 +67,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [location]);
+  }, [location, location.state?.refresh]);
 
   return (
     <div className="min-h-screen bg-black text-white transition-all duration-500">
@@ -86,9 +111,11 @@ const Dashboard = () => {
                 <h3 className="text-xl font-bold text-indigo-300">{data.athleteName || 'Unknown Athlete'}</h3>
                 <p className="text-gray-400">Sport: {data.sport || 'Not specified'}</p>
                 <div className={`mt-3 px-3 py-1 rounded-full text-sm font-semibold transition-all duration-300 
-                  ${data.riskFlag === 'High' ? 'bg-red-500 text-white shadow-red-500' : 'bg-green-500 text-white shadow-green-500'}`}
+                  ${data.exertionCategory === 'High' ? 'bg-red-500 text-white shadow-red-500' : 
+                    data.exertionCategory === 'Moderate' ? 'bg-yellow-500 text-black shadow-yellow-500' : 
+                    'bg-green-500 text-white shadow-green-500'}`}
                 >
-                  Risk: {data.riskFlag || 'Low'}
+                  Exertion: {data.exertionCategory} ({data.exertionLevel.toFixed(1)}%)
                 </div>
               </Link>
             ))
@@ -109,6 +136,7 @@ const Dashboard = () => {
                 >
                   <span className="font-semibold">{data.athleteName || 'Unknown Athlete'}</span> - 
                   <span className="ml-2 text-gray-300">Hours: {data.hoursTrained || 0}, Sessions: {data.sessionsPerWeek || 0}, Rest Days: {data.restDays || 0}</span>
+                  <span className="ml-2 text-gray-300">Exertion: {data.exertionCategory} ({data.exertionLevel.toFixed(1)}%)</span>
                 </li>
               ))}
             </ul>
@@ -120,5 +148,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-

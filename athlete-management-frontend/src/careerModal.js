@@ -35,7 +35,7 @@ const predictCareerGuidance = async (model, athleteData) => {
   const inputTensor = tf.tensor2d([normalizeData(athleteData)]);
   const prediction = model.predict(inputTensor);
   const result = await prediction.data();
-  const categories = ['Focus on Training', 'Competition Ready', 'Injury Prevention'];
+  const categories = ['Focus on Training', 'Competition Ready', 'Sustain Performance'];
   const maxIndex = result.indexOf(Math.max(...result));
   return categories[maxIndex];
 };

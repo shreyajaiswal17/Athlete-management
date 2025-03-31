@@ -32,13 +32,31 @@ const athleteSchema = new mongoose.Schema({
     default: 0, 
     description: 'Total current savings (in USD)' 
   },
+  weight: { type: Number, description: 'Weight in kilograms' },
+  height: { type: Number, description: 'Height in centimeters' },
   sponsorships: [{
     sponsor: String,
     amount: Number,
     startDate: Date,
     endDate: Date
   }],
-  createdAt: { type: Date, default: Date.now }
+  // Store generated meal plan and hydration data
+  mealPlan: [{
+    totalCalories: Number,
+    meals: [{
+      title: String,
+      readyInMinutes: Number,
+      servings: Number,
+      sourceUrl: String
+    }],
+    generatedAt: { type: Date, default: Date.now }
+  }],
+  hydrationPlan: {
+    totalWater: Number, // in liters
+    generatedAt: { type: Date, default: Date.now }
+  },
+  createdAt: { type: Date, default: Date.now },
+
 });
 
 const Athlete = mongoose.model('Athlete', athleteSchema);

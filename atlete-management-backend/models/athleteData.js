@@ -20,6 +20,10 @@ const athleteDataSchema = new mongoose.Schema({
     default: 0, 
     description: 'Income earned this period (e.g., weekly, in USD)' 
   },
+  intensity: { type: Number, default: 5, min: 1 }, // New field: RPE 1-10
+  exertionLevel: { type: Number, default: 0 },
+  exertionCategory: { type: String, default: 'Low' },
+  riskFlag: { type: String, default: 'Low Risk' },
   timestamp: { type: Date, default: Date.now }
 });
 
