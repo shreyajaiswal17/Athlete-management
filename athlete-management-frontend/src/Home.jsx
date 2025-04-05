@@ -61,31 +61,30 @@ const Home = () => {
       <nav className="bg-black/90 backdrop-blur-md sticky top-0 z-20 p-4 md:p-6 flex justify-between items-center shadow-lg border-b border-blue-900">
         <div className="flex items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white">AthletePro</h1>
+<<<<<<< HEAD
           <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">Athlete Management System</p>
+=======
+          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90"></p>
+          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90"></p>
+>>>>>>> d72f2fd194990e33c23f4997a1bed267d5d07514
         </div>
         <div className="flex space-x-6">
           <Link to="/" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Dashboard
+            About
           </Link>
           <Link to="/training" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Training
+            Features
           </Link>
           <Link to="/nutrition" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Nutrition
-          </Link>
-          <Link to="/analytics" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Analytics
-          </Link>
-          <Link to="/community" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Community
+            Testimonial
           </Link>
         </div>
         <div className="flex space-x-4">
           <button className="text-sm md:text-base text-gray-400 hover:text-blue-300 focus:outline-none">
-            <span className="material-icons">notifications</span>
+            <span className="material-icons"></span>
           </button>
           <button className="text-sm md:text-base text-gray-400 hover:text-blue-300 focus:outline-none">
-            <span className="material-icons">account_circle</span>
+            <span className="material-icons"></span>
           </button>
           <Link to="/login">
             <button className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm md:text-base transition-colors">
@@ -98,7 +97,8 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 py-12 md:py-16">
         <div className="text-center md:text-left mb-8 md:mb-0">
-          <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2">Athlete management system</p>
+          <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2"></p>
+          <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2"></p>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Elevate Your Athletic Performance</h1>
           <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-lg">
             A comprehensive platform designed to optimize every aspect of your athletic journey, from training and nutrition to career planning and financial success.
@@ -160,13 +160,11 @@ const Home = () => {
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <div>
             <h3 className="text-xl md:text-2xl font-bold text-white">AthletePro</h3>
-            <p className="text-sm md:text-base text-blue-300 opacity-90">Empowering athletes to reach their full potential</p>
+            <p className="text-sm md:text-base text-blue-300 opacity-90"></p>
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">About</a>
-            <a href="#" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">Features</a>
-            <a href="#" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">Testimonials</a>
-            <a href="#" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">Contact</a>
+            {/* <a href="#" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">About</a>
+            */}
           </div>
         </div>
         <p className="text-sm md:text-base">© 2025 AthletePro. All rights reserved.</p>
