@@ -56,12 +56,12 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2e0351] via-[#3f0a5e] to-[#1b0621] text-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000] text-white font-sans relative overflow-hidden">
       {/* Navigation Bar */}
       <nav className="bg-black/90 backdrop-blur-md sticky top-0 z-20 p-4 md:p-6 flex justify-between items-center shadow-lg border-b border-blue-900">
         <div className="flex items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white">AthletePro</h1>
-          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">athlete management system</p>
+          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">Athlete Management System</p>
         </div>
         <div className="flex space-x-6">
           <Link to="/" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
