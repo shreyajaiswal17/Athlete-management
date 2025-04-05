@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 
 function Chatbot() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to PeakPulse! How can I assist you today?' }
+    { role: 'assistant', content: 'Welcome to AthletixHub! How can I assist you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
