@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 
 function Chatbot() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to PeakPulse! How can I assist you today?' }
+    { role: 'assistant', content: 'Welcome to AthletixHub! How can I assist you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +38,7 @@ function Chatbot() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+          className="bg-black text-white p-4 rounded-full shadow-lg hover:bg-purple-500 transition-colors"
         >
           💬 Chat
         </button>
@@ -87,7 +87,7 @@ function Chatbot() {
             <button
               onClick={sendMessage}
               disabled={isLoading}
-              className="bg-green-600 text-white px-4 py-2 rounded-r-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="bg-gray-800 text-white px-4 py-2 rounded-r-lg hover:bg-purple-500 transition-colors disabled:opacity-50"
             >
               Send
             </button>
