@@ -111,7 +111,7 @@ const careerResources = {
       { name: 'Agility Workouts', url: 'https://www.sportfitnessadvisor.com', desc: 'Enhance quickness.' },
     ],
     'Competition Ready': [
-      { name: 'Pro Kabaddi Stats', url: 'https://www.prokabaddi.com', desc: 'Analyze match performance.' },
+      { na2me: 'Pro Kabaddi Stats', url: 'https://www.prokabaddi.com', desc: 'Analyze match performance.' },
       { name: 'IKF Events', url: 'https://www.kabaddiikf.com', desc: 'Compete internationally.' },
       { name: 'Kabaddi Scout Network', url: 'https://www.kabaddiscout.com', desc: 'Get noticed.' },
     ],
@@ -161,11 +161,10 @@ const careerResources = {
 const calculateCompetitionWins = (competitionHistory) => {
   if (!competitionHistory || !Array.isArray(competitionHistory) || competitionHistory.length === 0) return 0;
   return competitionHistory.filter(comp => {
-    const result = comp.result?.toLowerCase();
-    return result === '1st' || result === 'win';
+    const result = comp.result?.toLowerCase().trim(); // Remove leading/trailing spaces
+    return result === '1st' || result === 'win' || result === 'first' || result.includes('1st place');
   }).length;
 };
-
 // Calculate Performance Efficiency Score (0-100) with role as parameter
 const calculatePerformanceEfficiency = (hoursTrained, sessionsPerWeek, restDays, competitionWins, sport, role) => {
   const maxHours = sport === 'Swimming' ? 30 : sport === 'Basketball' ? 25 : sport === 'Cricket' && role === 'Bowler' ? 25 : 20;
@@ -473,6 +472,8 @@ useEffect(() => {
   // Generate performance analysis
   useEffect(() => {
     if (athleteData && performanceData.length > 0) {
+      console.log('Performance Data:', performanceData);
+      console.log('Athlete Data:', athleteData);
       const trendAnalysis = analyzePerformanceTrends(performanceData, athleteData.sport);
       const { efficiency, recommendations } = generatePerformanceRecommendations(athleteData, performanceData);
       const latest = performanceData[performanceData.length - 1];

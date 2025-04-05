@@ -14,6 +14,9 @@ function CreateAthlete() {
     age: "",
     gender: "",
     location: "",
+    hoursTrained: "",
+    sessionsPerWeek: "",
+    pastInjuries: "",
     careerGoals: [],
     currentIncome: "",
     savings: "",
@@ -83,7 +86,8 @@ function CreateAthlete() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:3000/api/athlete/create-athlete", {
+      const apiUrl = import.meta.env.VITE_API_URL; // Fallback to localhost if not set
+      const response = await fetch(`${apiUrl}/api/athlete/create-athlete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -98,6 +102,7 @@ function CreateAthlete() {
       }
     } catch (error) {
       alert("An error occurred while creating the athlete");
+      console.error("Error:", error);
     }
   };
 
@@ -400,7 +405,7 @@ function CreateAthlete() {
             <h2 className="text-2xl font-semibold mb-4">Financial Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-lg text-gray-300">Current Income (USD/year)</label>
+                <label className="block text-lg text-gray-300">Current Income (INR/year)</label>
                 <input
                   type="number"
                   name="currentIncome"
@@ -412,7 +417,7 @@ function CreateAthlete() {
                 />
               </div>
               <div>
-                <label className="block text-lg text-gray-300">Savings (USD)</label>
+                <label className="block text-lg text-gray-300">Savings (INR)</label>
                 <input
                   type="number"
                   name="savings"

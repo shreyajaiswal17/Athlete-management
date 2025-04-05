@@ -4,33 +4,30 @@ import Athlete from '../models/athlete.js';
 import AthleteData from '../models/athleteData.js';
 
 const router = express.Router();
+
 // Sport-specific demand multipliers
 const sportMultipliers = {
   'Tennis': 1.2,
   'Swimming': 0.8,
   'Running': 1.0,
   'Weightlifting': 1.5,
-  // Add more sports as needed
-  'default': 1.0 // Fallback for unknown sports
+  'Cricket': 1.0,
+  'default': 1.0
 };
+
 // Calculate exertion level with intensity and sport-specific factors
 const calculateExertionLevel = (hoursTrained, sessionsPerWeek, restDays, intensity, sport) => {
   const sportMultiplier = sportMultipliers[sport] || sportMultipliers['default'];
-  const maxHours = 50; // Max reasonable training hours
-  const normalizationFactor = maxHours * 2; // Adjusted normalization factor
+  const maxHours = 50;
+  const normalizationFactor = maxHours * 2;
 
-  // Adjusted weights for raw exertion calculation
   const rawExertion = (hoursTrained * intensity * sportMultiplier) + (sessionsPerWeek * 8) - (restDays * 20);
-
-  // Normalize the exertion level to a 0–100 scale
   const exertionLevel = Math.min(100, Math.max(0, (rawExertion / normalizationFactor) * 100));
 
-  // Categorize the exertion level
   if (exertionLevel > 88) return { value: exertionLevel, category: 'High' };
   if (exertionLevel > 33) return { value: exertionLevel, category: 'Moderate' };
   return { value: exertionLevel, category: 'Low' };
 };
-
 
 // Risk Flag Model (5 inputs)
 const model = tf.sequential();
@@ -42,14 +39,14 @@ model.compile({ optimizer: 'adam', loss: 'sparseCategoricalCrossentropy', metric
 const normalizeInput = (input) => {
   const [hoursTrained, sessionsPerWeek, pastInjuries, restDays, age, daysSinceLastInjury] = input;
   const result = [
-    Math.min(hoursTrained, 100) / 100, // 0-100 hours
-    Math.min(sessionsPerWeek, 7) / 7,  // 0-7 sessions
-    Math.min(pastInjuries, 20) / 20,    // 0-20 injuries
-    Math.min(restDays, 7) / 7,          // 0-7 rest days
-    Math.min(age, 100) / 100           // 0-100 years
+    Math.min(hoursTrained, 100) / 100,
+    Math.min(sessionsPerWeek, 7) / 7,
+    Math.min(pastInjuries, 20) / 20,
+    Math.min(restDays, 7) / 7,
+    Math.min(age, 100) / 100
   ];
   if (daysSinceLastInjury !== undefined) {
-    result.push(Math.min(daysSinceLastInjury, 365) / 365); // 0-365 days
+    result.push(Math.min(daysSinceLastInjury, 365) / 365);
   }
   return result;
 };
@@ -71,8 +68,8 @@ const trainModel = async () => {
         parseFloat(d.athleteId.age || 0)
       ]));
       const ys = validData.map(d => 
-        d.hoursTrained > 40 && d.restDays < 2 && d.athleteId.injuryHistory.length > 0 ? 2 : // High
-        d.hoursTrained > 20 && d.sessionsPerWeek > 4 ? 1 : 0 // Moderate : Low
+        d.hoursTrained > 40 && d.restDays < 2 && d.athleteId.injuryHistory.length > 0 ? 2 :
+        d.hoursTrained > 20 && d.sessionsPerWeek > 4 ? 1 : 0
       );
       await model.fit(tf.tensor2d(xs, [xs.length, 5], 'float32'), tf.tensor1d(ys), { epochs: 50, verbose: 1 });
       console.log('Risk flag model trained');
@@ -144,7 +141,7 @@ const trainInjuryModel = async () => {
 trainInjuryModel();
 
 // Enhanced helper function to generate detailed prevention recommendations
-const generatePreventionRecommendation = (prediction, input, sport = 'your sport') => {
+const generatePreventionRecommendation = (prediction, input, sport = 'General') => {
   const [hoursTrained, sessionsPerWeek, pastInjuries, restDays, age, daysSinceLastInjury] = input;
 
   let riskLevel, recommendation, explanation;
@@ -176,110 +173,25 @@ const calculateTrainingMetrics = (hoursTrained, sessionsPerWeek, restDays, inten
   const recoveryScore = Math.max(0, Math.min(100, (restDays * 15) - (sessionsPerWeek * 10)));
   const riskFlag = trainingLoad > 300 || recoveryScore < 30 ? 'High Risk' : recoveryScore < 50 ? 'Moderate Risk' : 'Low Risk';
 
-  // Sport-specific recommendations
   const recommendations = [];
-
-  // Training adjustments
   if (trainingLoad > 300) {
     recommendations.push({
-      recommendation: 'Reduce training load by 20-30% to avoid overtraining and fatigue.',
-      explanation: 'Overtraining increases the risk of stress fractures, muscle strains, and burnout. Reducing training load allows the body to recover and adapt.'
+      recommendation: 'Reducers training load by 20-30% to avoid overtraining and fatigue.',
+      explanation: 'Overtraining increases the risk of stress fractures, muscle strains, and burnout.'
     });
   }
   if (sessionsPerWeek > 5) {
     recommendations.push({
       recommendation: 'Limit training sessions to 5 per week to balance intensity and recovery.',
-      explanation: 'Excessive sessions can lead to overuse injuries like tendinitis. Reducing sessions gives muscles and joints time to recover.'
+      explanation: 'Excessive sessions can lead to overuse injuries like tendinitis.'
     });
   }
-
-  // Recovery techniques
   if (recoveryScore < 30) {
     recommendations.push({
       recommendation: 'Increase rest days to at least 2-3 per week to improve recovery.',
-      explanation: 'Rest days allow the body to repair microtears in muscles, reducing the risk of chronic injuries like tendinopathy.'
-    });
-    recommendations.push({
-      recommendation: 'Incorporate active recovery techniques like yoga, stretching, or swimming.',
-      explanation: 'Active recovery improves blood flow, reduces stiffness, and prevents muscle imbalances that can lead to injuries.'
-    });
-  } else if (recoveryScore >= 30 && recoveryScore < 50) {
-    recommendations.push({
-      recommendation: 'Add foam rolling or massage therapy to your recovery routine.',
-      explanation: 'Foam rolling and massage reduce muscle tightness and improve flexibility, lowering the risk of strains.'
-    });
-    recommendations.push({
-      recommendation: 'Use ice baths or contrast showers to reduce muscle soreness.',
-      explanation: 'Cold therapy reduces inflammation and speeds up recovery, preventing overuse injuries.'
+      explanation: 'Rest days allow the body to repair microtears in muscles.'
     });
   }
-
-  // Nutrition
-  recommendations.push({
-    recommendation: 'Ensure adequate protein intake (1.6-2.2g/kg body weight) to support muscle repair.',
-    explanation: 'Protein is essential for repairing muscle damage caused by intense training, reducing the risk of muscle tears.'
-  });
-  recommendations.push({
-    recommendation: 'Stay hydrated by drinking at least 2-3 liters of water daily.',
-    explanation: 'Dehydration can lead to muscle cramps and reduced joint lubrication, increasing the risk of injuries.'
-  });
-  recommendations.push({
-    recommendation: 'Include anti-inflammatory foods like berries, nuts, and leafy greens in your diet.',
-    explanation: 'Anti-inflammatory foods help reduce muscle soreness and joint inflammation, preventing chronic injuries.'
-  });
-
-  // Mental health and stress management
-  recommendations.push({
-    recommendation: 'Practice mindfulness or meditation to manage stress and improve focus.',
-    explanation: 'Stress can increase muscle tension and reduce focus, leading to poor form and a higher risk of injuries.'
-  });
-  recommendations.push({
-    recommendation: 'Ensure you get 7-9 hours of quality sleep each night for optimal recovery.',
-    explanation: 'Sleep is critical for tissue repair and hormonal balance, reducing the likelihood of overuse injuries.'
-  });
-
-  // Injury prevention (sport-specific)
-  if (injuryHistory.length > 0) {
-    recommendations.push({
-      recommendation: 'Focus on strengthening exercises for previously injured areas.',
-      explanation: 'Strengthening weak areas reduces the risk of re-injury by improving stability and resilience.'
-    });
-    recommendations.push({
-      recommendation: 'Schedule regular physiotherapy sessions to monitor and prevent recurring injuries.',
-      explanation: 'Physiotherapy helps identify and address biomechanical issues that could lead to recurring injuries.'
-    });
-  }
-
-  // Sport-specific recommendations
-  if (sport === 'Basketball') {
-    recommendations.push({
-      recommendation: 'Incorporate plyometric exercises like box jumps to improve explosive power.',
-      explanation: 'Plyometric training strengthens tendons and reduces the risk of ankle and knee injuries common in basketball.'
-    });
-    recommendations.push({
-      recommendation: 'Practice landing mechanics to reduce stress on knees during jumps.',
-      explanation: 'Proper landing mechanics prevent ACL injuries by reducing impact forces on the knees.'
-    });
-  } else if (sport === 'Swimming') {
-    recommendations.push({
-      recommendation: 'Focus on shoulder mobility exercises to prevent overuse injuries.',
-      explanation: 'Swimming involves repetitive shoulder movements, and improving mobility reduces the risk of rotator cuff injuries.'
-    });
-    recommendations.push({
-      recommendation: 'Incorporate core strengthening exercises to improve stroke efficiency.',
-      explanation: 'A strong core stabilizes the body in the water, reducing strain on the shoulders and lower back.'
-    });
-  } else if (sport === 'Running') {
-    recommendations.push({
-      recommendation: 'Incorporate hill sprints to build strength and reduce impact forces.',
-      explanation: 'Hill sprints strengthen the lower body and reduce the repetitive impact forces associated with flat running.'
-    });
-    recommendations.push({
-      recommendation: 'Rotate running shoes every 300-500 miles to maintain cushioning.',
-      explanation: 'Worn-out shoes lose cushioning, increasing the risk of stress fractures and joint pain.'
-    });
-  }
-
   return { trainingLoad, recoveryScore, riskFlag, recommendations };
 };
 
@@ -287,13 +199,8 @@ const calculateTrainingMetrics = (hoursTrained, sessionsPerWeek, restDays, inten
 router.get('/training-metrics/:id', async (req, res) => {
   try {
     const athleteId = req.params.id.trim();
-    console.log("athleteId",athleteId);
-   
-
     const athlete = await Athlete.findById(athleteId);
-    console.log("athlete",athlete);
     const latestPerformance = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
-    console.log(latestPerformance);
     if (!athlete || !latestPerformance) {
       return res.status(404).json({ message: 'Athlete or performance data not found' });
     }
@@ -317,7 +224,7 @@ router.get('/training-metrics/:id', async (req, res) => {
         recoveryScore: `Your recovery score is ${recoveryScore}, indicating ${recoveryScore < 30 ? 'poor recovery' : recoveryScore < 50 ? 'moderate recovery' : 'good recovery'}.`,
         riskFlag: `Your current risk level is ${riskFlag}.`
       },
-      recommendations: recommendations || []
+      recommendations
     });
   } catch (error) {
     console.error('Error fetching training metrics:', error);
@@ -341,11 +248,12 @@ router.post('/create-athlete', async (req, res) => {
   try {
     const { athleteId, name, sport, age, gender, location, careerGoals, currentIncome, savings } = req.body;
     if (!athleteId || !name || !sport) {
-      return res.status(400).json({ message: 'Missing required fields: athleteId, name, and sport are required' });
+      return res.status(400).json({ message: 'Missing required fields' });
     }
+
     const existingAthlete = await Athlete.findOne({ athleteId });
     if (existingAthlete) {
-      return res.status(400).json({ message: 'An athlete with this athleteId already exists' });
+      return res.status(400).json({ message: 'Athlete already exists' });
     }
 
     const parsedAge = parseFloat(age || 0);
@@ -360,16 +268,49 @@ router.post('/create-athlete', async (req, res) => {
     const athlete = new Athlete(athleteData);
     await athlete.save();
 
+    const calculateInitialTrainingMetrics = (sport, age, competitionHistory, injuryHistory) => {
+      let baseHoursTrained = 10;
+      let baseSessionsPerWeek = 3;
+      let baseRestDays = 2;
+
+      const sportMultiplier = sportMultipliers[sport] || 1.0;
+      baseHoursTrained *= sportMultiplier;
+      baseSessionsPerWeek = Math.min(5, baseSessionsPerWeek * sportMultiplier);
+
+      if (age > 40) {
+        baseHoursTrained *= 0.8;
+        baseRestDays += 1;
+      }
+      if (competitionHistory.length > 0) baseHoursTrained += 2;
+      if (injuryHistory.length > 0) {
+        baseHoursTrained *= 0.9;
+        baseRestDays += 1;
+      }
+
+      return {
+        hoursTrained: Math.max(5, Math.min(30, Math.round(baseHoursTrained))),
+        sessionsPerWeek: Math.max(1, Math.min(7, Math.round(baseSessionsPerWeek))),
+        restDays: Math.max(1, Math.min(4, Math.round(baseRestDays)))
+      };
+    };
+
+    const metrics = calculateInitialTrainingMetrics(sport, parsedAge, athleteData.competitionHistory, athleteData.injuryHistory);
+    console.log(`Calculated Metrics for ${name}:`, metrics);
+
     const athletePerformance = new AthleteData({ 
       athleteId: athlete._id, 
-      hoursTrained: 0, 
-      sessionsPerWeek: 0, 
-      restDays: 0, 
-     intensity: 5, // Default intensity
-     riskFlag: 'Low Risk',
-      timestamp: new Date() 
+      hoursTrained: metrics.hoursTrained,
+      sessionsPerWeek: metrics.sessionsPerWeek,
+      restDays: metrics.restDays,
+      intensity: 2 * metrics.sessionsPerWeek,
+      riskFlag: predictRiskFlag([metrics.hoursTrained, metrics.sessionsPerWeek, athlete.injuryHistory.length, metrics.restDays, parsedAge]),
+      timestamp: new Date()
     });
     await athletePerformance.save();
+    console.log(`Saved AthleteData:`, athletePerformance.toObject());
+
+    const savedData = await AthleteData.findById(athletePerformance._id);
+    console.log(`Verified Saved Data:`, savedData.toObject());
 
     res.status(201).json({ message: 'Athlete created successfully', athlete });
   } catch (error) {
@@ -382,8 +323,11 @@ router.post('/create-athlete', async (req, res) => {
 router.get('/performance/:id', async (req, res) => {
   try {
     const athlete = await Athlete.findById(req.params.id);
-    const performanceData = await AthleteData.find({ athleteId: req.params.id });
     if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
+    const performanceData = await AthleteData.find({ athleteId: req.params.id }).sort({ timestamp: -1 });
+    console.log(`Performance Data for ${athlete.name}:`, performanceData);
+
     res.json({
       performanceData: performanceData.map(data => ({
         athleteName: athlete.name,
@@ -407,7 +351,8 @@ router.get('/performance/:id', async (req, res) => {
       }))
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching performance:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -493,18 +438,20 @@ router.put('/performance/:performanceId', async (req, res) => {
   try {
     const { hoursTrained, sessionsPerWeek, restDays } = req.body;
     const performanceId = req.params.performanceId;
-    if (!hoursTrained || !sessionsPerWeek ) return res.status(400).json({ message: 'Missing required fields' });
+    if (hoursTrained === undefined || sessionsPerWeek === undefined) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
     const parsedHoursTrained = parseFloat(hoursTrained);
     const parsedSessionsPerWeek = parseFloat(sessionsPerWeek);
-    const parsedRestDays = parseFloat(restDays);
+    const parsedRestDays = parseFloat(restDays || 0);
     const parsedIntensity = 2 * parsedSessionsPerWeek;
-     // Updated intensity calculation
-     console.log("sessionsperweek",parsedSessionsPerWeek);
-      console.log("intensity",parsedIntensity);
-    if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) || isNaN(parsedRestDays) || 
-        parsedHoursTrained < 0 || parsedSessionsPerWeek < 0 || parsedRestDays < 0) {
+
+    if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) || 
+        parsedHoursTrained < 0 || parsedSessionsPerWeek < 0) {
       return res.status(400).json({ message: 'Performance fields must be positive numbers' });
     }
+
     const performance = await AthleteData.findById(performanceId).populate('athleteId');
     if (!performance) return res.status(404).json({ message: 'Performance record not found' });
     const athlete = performance.athleteId;
@@ -513,7 +460,7 @@ router.put('/performance/:performanceId', async (req, res) => {
     performance.hoursTrained = parsedHoursTrained;
     performance.sessionsPerWeek = parsedSessionsPerWeek;
     performance.restDays = parsedRestDays;
-    performance.intensity = parsedIntensity; // Updated intensity assignment
+    performance.intensity = parsedIntensity;
     performance.timestamp = new Date();
 
     const input = [
@@ -527,9 +474,10 @@ router.put('/performance/:performanceId', async (req, res) => {
     const { value: exertionLevel, category: exertionCategory } = calculateExertionLevel(
       parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
     );
-    performance.exertionLevel = exertionLevel; // Updated exertionLevel
-    performance.exertionCategory = exertionCategory; // Updated exertionCategory
+    performance.exertionLevel = exertionLevel;
+    performance.exertionCategory = exertionCategory;
     await performance.save();
+    console.log(`Updated Performance:`, performance.toObject());
 
     const lastInjuryDate = athlete.injuryHistory.length > 0
       ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
@@ -551,8 +499,6 @@ router.put('/performance/:performanceId', async (req, res) => {
       message: 'Performance updated successfully',
       performance: { 
         athleteId: athlete._id, 
-        hoursTrained: parsedHoursTrained, 
-        sessionsPerWeek: parsedSessionsPerWeek, 
         hoursTrained: parsedHoursTrained, 
         sessionsPerWeek: parsedSessionsPerWeek, 
         restDays: parsedRestDays, 
@@ -584,17 +530,23 @@ router.put('/performance/:performanceId', async (req, res) => {
 router.post('/log-performance', async (req, res) => {
   try {
     const { athleteId, hoursTrained, sessionsPerWeek, restDays } = req.body;
-    if (!athleteId || !hoursTrained || !sessionsPerWeek ) return res.status(400).json({ message: 'Missing required fields' });
+    if (!athleteId || hoursTrained === undefined || sessionsPerWeek === undefined) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
     const parsedHoursTrained = parseFloat(hoursTrained);
     const parsedSessionsPerWeek = parseFloat(sessionsPerWeek);
-    const parsedRestDays = parseFloat(restDays);
-    const parsedIntensity = 2 * parsedSessionsPerWeek; // Updated intensity calculation
-    if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) ||
-        parsedHoursTrained < 0 || parsedSessionsPerWeek < 0 || parsedIntensity < 1 ) {
+    const parsedRestDays = parseFloat(restDays || 0);
+    const parsedIntensity = 2 * parsedSessionsPerWeek;
+
+    if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) || 
+        parsedHoursTrained < 0 || parsedSessionsPerWeek < 0) {
       return res.status(400).json({ message: 'Performance fields must be positive numbers' });
     }
+
     const athlete = await Athlete.findById(athleteId);
     if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
     const latestPerformance = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
     const isRecent = latestPerformance && (new Date() - new Date(latestPerformance.timestamp)) < 24 * 60 * 60 * 1000;
     if (isRecent) {
@@ -616,18 +568,20 @@ router.post('/log-performance', async (req, res) => {
     const { value: exertionLevel, category: exertionCategory } = calculateExertionLevel(
       parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
     );
+
     const athletePerformance = new AthleteData({ 
       athleteId: athlete._id, 
       hoursTrained: parsedHoursTrained, 
       sessionsPerWeek: parsedSessionsPerWeek, 
       restDays: parsedRestDays, 
-      intensity: parsedIntensity, // Updated intensity assignment
+      intensity: parsedIntensity,
       riskFlag,
-      exertionLevel, // Updated exertionLevel
-      exertionCategory, // Updated exertionCategory
+      exertionLevel,
+      exertionCategory,
       timestamp: new Date() 
     });
     await athletePerformance.save();
+    console.log(`Logged Performance:`, athletePerformance.toObject());
 
     const lastInjuryDate = athlete.injuryHistory.length > 0
       ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
@@ -646,8 +600,8 @@ router.post('/log-performance', async (req, res) => {
     const fatigueIndex = Math.min(100, Math.max(0, (parsedHoursTrained * 0.5) + (parsedSessionsPerWeek * 5) - (parsedRestDays * 10)));
 
     const careerAdvice = athlete.age > 30 
-      ? `Consider focusing on injury prevention and long-term career sustainability in ${athlete.sport}. Explore coaching or mentoring opportunities to extend your involvement in the sport.`
-      : `Focus on skill development and competitive performance in ${athlete.sport}. Set short-term goals for upcoming competitions and long-term goals for career milestones.`;
+      ? `Consider focusing on injury prevention and long-term career sustainability in ${athlete.sport}. Explore coaching or mentoring opportunities.`
+      : `Focus on skill development and competitive performance in ${athlete.sport}. Set short-term and long-term goals.`;
 
     res.status(201).json({
       message: 'Performance logged successfully',
@@ -685,6 +639,7 @@ router.put('/:id/injuries', async (req, res) => {
     const { injury, severity, recoveryTime, date } = req.body;
     const athlete = await Athlete.findById(req.params.id);
     if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
     athlete.injuryHistory.push({ 
       injury: injury || 'Unknown', 
       severity: parseInt(severity) || 0, 
