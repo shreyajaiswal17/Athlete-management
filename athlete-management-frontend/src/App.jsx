@@ -43,11 +43,16 @@ function App() {
           />
           <Route path="/chatbot" element={<Chatbot />} />
         </Routes>
+        <Chatbot/>
       </div>
+
+
    
   );
 }
 
 export default App;
+
+
 
 

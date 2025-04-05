@@ -1,13 +1,16 @@
+
+
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 
 function Chatbot() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Welcome to PeakPulse! How can I assist you today?' } // Initial greeting
+    { role: 'assistant', content: 'Welcome to PeakPulse! How can I assist you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // Toggle chat window visibility
   const messagesEndRef = useRef(null);
 
   const sendMessage = async () => {
@@ -16,7 +19,7 @@ function Chatbot() {
     setInput('');
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/chatbot', { message: input });
+      const response = await axios.post('http://localhost:3000/api/chatbot', { message: input }); // Update URL if deployed
       setMessages((prev) => [...prev, { role: 'assistant', content: response.data.response }]);
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Error. Try again.' }]);
@@ -30,11 +33,33 @@ function Chatbot() {
   }, [messages, isLoading]);
 
   return (
-    <div className="chat-container">
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
-        <div className="w-full max-w-2xl bg-gray-800 rounded-lg shadow-lg flex flex-col p-4">
-          <h1 className="text-2xl font-bold text-center mb-4">Athlete Chatbot</h1>
-          <div className="flex-1 overflow-y-auto bg-gray-700 p-4 rounded-lg mb-4">
+    <div className="fixed bottom-4 right-4 z-50">
+      {/* Floating Chat Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+        >
+          💬 Chat
+        </button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div className="w-80 bg-gray-800 rounded-lg shadow-lg flex flex-col p-4">
+          {/* Header with Close Button */}
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-xl font-bold text-white">Athlete Chatbot</h1>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-white text-lg"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Messages Area */}
+          <div className="flex-1 h-64 overflow-y-auto bg-gray-700 p-4 rounded-lg mb-4">
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -48,6 +73,8 @@ function Chatbot() {
             {isLoading && <div className="text-gray-400">AI is typing...</div>}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Input Area */}
           <div className="flex items-center">
             <input
               type="text"
@@ -66,7 +93,7 @@ function Chatbot() {
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
