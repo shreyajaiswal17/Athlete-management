@@ -61,12 +61,9 @@ const Home = () => {
       <nav className="bg-black/90 backdrop-blur-md sticky top-0 z-20 p-4 md:p-6 flex justify-between items-center shadow-lg border-b border-blue-900">
         <div className="flex items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white">AthletePro</h1>
-<<<<<<< HEAD
           <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">Athlete Management System</p>
-=======
           <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90"></p>
           <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90"></p>
->>>>>>> d72f2fd194990e33c23f4997a1bed267d5d07514
         </div>
         <div className="flex space-x-6">
           <Link to="/" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
