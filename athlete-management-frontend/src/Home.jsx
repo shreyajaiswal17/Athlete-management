@@ -156,7 +156,7 @@ const Home = () => {
       <footer className="bg-black text-gray-400 text-center p-6 md:p-8 border-t border-blue-900">
         <div className="flex flex-col md:flex-row justify-between items-center mb-4">
           <div>
-            <h3 className="text-xl md:text-2xl font-bold text-white">AthletePro</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white">AthletixHub</h3>
             <p className="text-sm md:text-base text-blue-300 opacity-90"></p>
           </div>
           <div className="flex space-x-6 mt-4 md:mt-0">
