@@ -4,6 +4,9 @@
   padding: 2rem;
   text-align: center;
 }
+body {
+  @apply bg-[#1b0621] text-white;
+}
 
 .logo {
   height: 6em;
@@ -40,3 +43,4 @@
 .read-the-docs {
   color: #888;
 }
+
