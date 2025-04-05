@@ -56,12 +56,12 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-gray-800 text-gray-100 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#2e0351] via-[#3f0a5e] to-[#1b0621] text-white font-sans relative overflow-hidden">
       {/* Navigation Bar */}
       <nav className="bg-black/90 backdrop-blur-md sticky top-0 z-20 p-4 md:p-6 flex justify-between items-center shadow-lg border-b border-blue-900">
         <div className="flex items-center">
           <h1 className="text-2xl md:text-3xl font-bold text-white">AthletePro</h1>
-          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">Elite athlete management system</p>
+          <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90">athlete management system</p>
         </div>
         <div className="flex space-x-6">
           <Link to="/" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
@@ -98,7 +98,7 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 py-12 md:py-16">
         <div className="text-center md:text-left mb-8 md:mb-0">
-          <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2">Elite athlete management system</p>
+          <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2">Athlete management system</p>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Elevate Your Athletic Performance</h1>
           <p className="text-lg md:text-xl text-gray-200 mb-6 max-w-lg">
             A comprehensive platform designed to optimize every aspect of your athletic journey, from training and nutrition to career planning and financial success.
