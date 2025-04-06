@@ -1,0 +1,53 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "index.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/career-model/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/api/athlete/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/api/ai/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/finance/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/training/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/api/nutrition/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/api/chatbot/(.*)",
+        "dest": "index.js"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "index.js"
+      }
+    ],
+    "env": {
+      "NODE_ENV": "production",
+      "MONGODB_URI": "@mongodb_uri"
+    },
+    "functions": {
+      "index.js": {
+        "memory": 1024,
+        "maxDuration": 10
+      }
+    }
+  }

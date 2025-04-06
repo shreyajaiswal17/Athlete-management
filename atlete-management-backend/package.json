@@ -1,11 +1,13 @@
 {
   "name": "atlete-management-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon -r dotenv/config --experimental-json-modules  src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules  src/index.js",
+    "start": "node index.js",
+    "build": "npm install --production"
   },
   "author": "",
   "license": "ISC",

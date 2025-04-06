@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 
 // Define a simple sequential model
 const loadModel = async () => {
-    const model = await tf.loadLayersModel('http://localhost:3000/career-model/model.json');
+    const model = await tf.loadLayersModel(`${import.meta.env.VITE_API_URL}/career-model/model.json`);
     return model;
   };
 const createCareerModel = () => {
