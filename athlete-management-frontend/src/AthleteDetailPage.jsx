@@ -315,52 +315,132 @@ function AthleteDetailPage() {
     if (athleteData && performanceData.length > 0) fetchCareerGuidance();
   }, [athleteData, performanceData]);
 
-  // Fetch financial planning
-  useEffect(() => {
-    const fetchFinancialPlanning = async () => {
-      try {
-        const trainResponse = await axios.get('http://localhost:3000/finance/financial-train');
-        if (trainResponse.data.message !== 'Financial model trained successfully and stored in memory') {
-          throw new Error('Financial model training failed: ' + trainResponse.data.message);
-        }
-        const athlete = athleteData || {};
-        const latestPerformance = performanceData.length > 0 ? performanceData[performanceData.length - 1] : null;
-        const competitionWins = calculateCompetitionWins(athlete.competitionHistory);
-        const financialInput = {
-          age: athlete.age || 0,
-          currentIncome: athlete.currentIncome || 0,
-          expenses: latestPerformance?.expenses || 0,
-          savings: athlete.savings || 0,
-          sport: athlete.sport || 'unknown',
-          competitionWins,
-          injuryCount: latestPerformance?.pastInjuries || athlete.injuryHistory?.length || 0,
-          careerGoals: athlete.careerGoals || ['Not specified'],
-        };
-        const response = await axios.post('http://localhost:3000/finance/financial-guidance', financialInput);
-        const { financialAdvice: advice, probabilities } = response.data;
-        const { age, currentIncome: income, expenses, savings, sport, injuryCount, careerGoals } = financialInput;
+  // Fetch financial planning (Updated to use ₹)
+ // Inside AthleteDetailPage component
 
-        const annualSurplus = income - expenses;
-        const savingsTarget = income * 0.25;
-        const injuryRiskCost = injuryCount > 0 ? expenses * 0.3 : 0;
-        const savingsIn10Years = savings * (1 + 0.05) ** 10;
-
-        let analysis = `<h3 class="text-purple-400 text-lg font-semibold">Financial Planning Analysis (Age ${age}, ${sport})</h3><p class="mt-2"><strong class="text-gray-300">Current Profile:</strong> Income: <span class="text-green-400">$${income}/year</span>, Expenses: <span class="text-red-400">$${expenses}/year</span>, Savings: <span class="text-yellow-300">$${savings}</span>, Wins: ${competitionWins}, Injuries: ${injuryCount}. <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}</p>`;
-        analysis += `<h4 class="text-teal-400 mt-4">Build Emergency Savings (Probability: ${Math.round(probabilities[0] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> Your <span class="text-yellow-300">$${annualSurplus} surplus</span> ${annualSurplus > 0 ? '<span class="text-green-400">supports saving</span>' : '<span class="text-red-400">requires expense cuts</span>'}. Injuries may cost <span class="text-red-400">$${injuryRiskCost}/year</span>.</li><li><strong class="text-gray-300">How:</strong> Save <span class="text-green-400">$${savingsTarget.toFixed(0)}/year</span> (25% of income).</li></ul>`;
-        analysis += `<h4 class="text-green-400 mt-4">Invest for Future Growth (Probability: ${Math.round(probabilities[1] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> With <span class="text-yellow-300">$${savings}</span>, ${income > expenses ? '<span class="text-green-400">you can grow wealth</span>' : '<span class="text-red-400">investing waits until surplus increases</span>'}.</li><li><strong class="text-gray-300">How:</strong> Invest <span class="text-green-400">$${Math.min(savings * 0.5, 5000).toFixed(0)}</span> in an S&P 500 ETF.</li></ul>`;
-        analysis += `<h4 class="text-orange-400 mt-4">Optimize Expenses (Probability: ${Math.round(probabilities[2] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> <span class="text-red-400">$${expenses}</span> is ${expenses > income * 0.6 ? '<span class="text-red-400">over 60% of income</span>' : '<span class="text-green-400">manageable</span>'}.</li><li><strong class="text-gray-300">How:</strong> Cut <span class="text-green-400">$${(expenses * 0.3).toFixed(0)}</span> (30%) via shared training costs.</li></ul>`;
-        analysis += `<p class="mt-4"><strong class="text-gray-300">Summary:</strong> In 10 years, savings could grow to <span class="text-green-400">$${savingsIn10Years.toFixed(0)}</span> at 5% APY.</p>`;
-
-        setFinancialPlanning({ advice, probabilities, analysis });
-      } catch (err) {
-        console.error('Error fetching financial planning:', err);
-        setError(prev => prev ? `${prev} | Financial planning error: ${err.message}` : `Financial planning error: ${err.message}`);
-        setFinancialPlanning({ advice: 'Unable to analyze financial plan at this time.', probabilities: [], analysis: '' });
+useEffect(() => {
+  const fetchFinancialPlanning = async () => {
+    try {
+      // Train the financial model
+      const trainResponse = await axios.get('http://localhost:3000/finance/financial-train');
+      if (trainResponse.data.message !== 'Financial model trained successfully and stored in memory') {
+        throw new Error(`Financial model training failed: ${trainResponse.data.message}`);
       }
-    };
 
-    if (athleteData && performanceData.length > 0) fetchFinancialPlanning();
-  }, [athleteData, performanceData]);
+      // Prepare athlete and performance data
+      const athlete = athleteData || {};
+      const latestPerformance = performanceData.length > 0 ? performanceData[performanceData.length - 1] : null;
+      const competitionWins = calculateCompetitionWins(athlete.competitionHistory);
+
+      // Define financial input
+      const financialInput = {
+        age: athlete.age || 0,
+        currentIncome: athlete.currentIncome || 0,
+        expenses: latestPerformance?.expenses || 0, // Overridden later
+        savings: athlete.savings || 0,
+        sport: athlete.sport || 'unknown',
+        competitionWins,
+        injuryCount: latestPerformance?.pastInjuries || athlete.injuryHistory?.length || 0,
+        careerGoals: athlete.careerGoals || ['Not specified'],
+      };
+
+      // Fetch financial guidance
+      const response = await axios.post('http://localhost:3000/finance/financial-guidance', financialInput);
+      const { financialAdvice: advice, probabilities } = response.data;
+      const { age, currentIncome: income, savings, sport, injuryCount, careerGoals } = financialInput;
+
+      // Financial calculations
+      const expenses = income - savings;
+      const annualSurplus = income - expenses;
+      const savingsTarget = income * 0.25;
+      const injuryRiskCost = injuryCount > 0 ? expenses * 0.3 : 0;
+      const savingsIn10Years = savings * (1 + 0.05) ** 10;
+
+      // Build analysis with blue-black theme
+      let analysis = `
+        <h3 class="text-blue-400 text-lg font-semibold">Financial Planning Analysis (Age ${age}, ${sport})</h3>
+        <p class="mt-2">
+          <strong class="text-gray-300">Current Profile:</strong> 
+          Income: <span class="text-green-400">₹${income}/year</span>, 
+          Expenses: <span class="text-red-400">₹${expenses}/year</span>, 
+          Savings: <span class="text-yellow-300">₹${savings}</span>, 
+          Wins: ${competitionWins}, 
+          Injuries: ${injuryCount}. 
+          <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}
+        </p>
+      `;
+
+      analysis += `
+        <h4 class="text-blue-300 mt-4">Build Emergency Savings (Probability: ${Math.round(probabilities[0] * 100)}%)</h4>
+        <ul class="list-disc pl-5 mt-2">
+          <li>
+            <strong class="text-gray-300">Why:</strong> 
+            Your <span class="text-yellow-300">₹${annualSurplus} surplus</span> 
+            ${annualSurplus > 0 ? '<span class="text-green-400">supports saving</span>' : '<span class="text-red-400">requires expense cuts</span>'}. 
+            Injuries may cost <span class="text-red-400">₹${injuryRiskCost}/year</span>.
+          </li>
+          <li>
+            <strong class="text-gray-300">How:</strong> 
+            Save <span class="text-green-400">₹${savingsTarget.toFixed(0)}/year</span> (25% of income).
+          </li>
+        </ul>
+      `;
+
+      analysis += `
+        <h4 class="text-blue-300 mt-4">Invest for Future Growth (Probability: ${Math.round(probabilities[1] * 100)}%)</h4>
+        <ul class="list-disc pl-5 mt-2">
+          <li>
+            <strong class="text-gray-300">Why:</strong> 
+            With <span class="text-yellow-300">₹${savings}</span>, 
+            ${income > expenses ? '<span class="text-green-400">you can grow wealth</span>' : '<span class="text-red-400">investing waits until surplus increases</span>'}.
+          </li>
+          <li>
+            <strong class="text-gray-300">How:</strong> 
+            Invest <span class="text-green-400">₹${Math.min(savings * 0.5, 5000).toFixed(0)}</span> in a mutual fund or ETF (e.g., NIFTY 50).
+          </li>
+        </ul>
+      `;
+
+      analysis += `
+        <h4 class="text-blue-300 mt-4">Optimize Expenses (Probability: ${Math.round(probabilities[2] * 100)}%)</h4>
+        <ul class="list-disc pl-5 mt-2">
+          <li>
+            <strong class="text-gray-300">Why:</strong> 
+            <span class="text-red-400">₹${expenses}</span> is 
+            ${expenses > income * 0.6 ? '<span class="text-red-400">over 60% of income</span>' : '<span class="text-green-400">manageable</span>'}.
+          </li>
+          <li>
+            <strong class="text-gray-300">How:</strong> 
+            Cut <span class="text-green-400">₹${(expenses * 0.3).toFixed(0)}</span> (30%) via shared training costs or local resources.
+          </li>
+        </ul>
+      `;
+
+      analysis += `
+        <p class="mt-4">
+          <strong class="text-gray-300">Summary:</strong> 
+          In 10 years, savings could grow to <span class="text-green-400">₹${savingsIn10Years.toFixed(0)}</span> at 5% APY.
+        </p>
+      `;
+
+      // Update state
+      setFinancialPlanning({ advice, probabilities, analysis });
+    } catch (err) {
+      console.error('Error fetching financial planning:', err);
+      setError((prev) => 
+        prev ? `${prev} | Financial planning error: ${err.message}` : `Financial planning error: ${err.message}`
+      );
+      setFinancialPlanning({
+        advice: 'Unable to analyze financial plan at this time.',
+        probabilities: [],
+        analysis: '',
+      });
+    }
+  };
+
+  // Trigger only if data exists
+  if (athleteData && performanceData.length > 0) fetchFinancialPlanning();
+}, [athleteData, performanceData]);
 
   // Generate performance analysis
   useEffect(() => {
