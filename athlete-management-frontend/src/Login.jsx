@@ -10,7 +10,7 @@ const AuthForm = () => {
   const handleAuth = () => {
     // Redirect to Auth0's hosted login page
     loginWithRedirect({
-      redirectUri: "http://localhost:5173", // Where to go after login
+      redirectUri: `${VITE_AUTH0_REDIRECT_URI}`, // Where to go after login
       screen_hint: isLogin ? "login" : "signup", // Hint to Auth0: login or signup
     });
   };
@@ -18,7 +18,7 @@ const AuthForm = () => {
   const handleGoogleLogin = () => {
     // Redirect to Auth0 with Google connection
     loginWithRedirect({
-      redirectUri: "http://localhost:5173",
+      redirectUri: `${VITE_AUTH0_REDIRECT_URI}`,
       connection: "google-oauth2", // Specify Google OAuth2 connection
     });
   };
