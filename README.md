@@ -24,9 +24,9 @@ The Indian sporting ecosystem lacks centralized athlete management tools. Our sy
 
 ## 🧰 Tech Stack
 
-- **Frontend**: React.js / Angular
-- **Backend**: Node.js / Django
-- **Database**: Firebase / PostgreSQL
+- **Frontend**: React.js 
+- **Backend**: Node.js, Django, TensorFlow
+- **Database**: MongoDB
 - **Cloud**: Google Cloud / AWS
 - **AI Integration**: Google Gemini API (for predictive performance analytics)
 
