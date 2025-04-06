@@ -19,7 +19,7 @@ function Chatbot() {
     setInput('');
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/chatbot', { message: input }); // Update URL if deployed
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/chatbot`, { message: input }); // Update URL if deployed
       setMessages((prev) => [...prev, { role: 'assistant', content: response.data.response }]);
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Error. Try again.' }]);

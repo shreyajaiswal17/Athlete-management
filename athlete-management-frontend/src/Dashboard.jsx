@@ -18,7 +18,7 @@ const Dashboard = () => {
   // Fetch athlete data and injury predictions from API
   const fetchData = async () => {
     try {
-      const athleteResponse = await fetch('http://localhost:3000/api/athlete/data');
+      const athleteResponse = await fetch( `${import.meta.env.VITE_API_URL}/api/athlete/data`);
       if (!athleteResponse.ok) throw new Error(`HTTP error! status: ${athleteResponse.status}`);
       const athleteDataRaw = await athleteResponse.json();
       console.log('Raw Athlete Data:', JSON.stringify(athleteDataRaw, null, 2));
@@ -27,7 +27,7 @@ const Dashboard = () => {
         athleteDataRaw.map(async (athlete) => {
           try {
             const injuryResponse = await fetch(
-              `http://localhost:3000/api/athlete/injury-prediction/${athlete.athleteId}`
+              `${import.meta.env.VITE_API_URL}/api/athlete/injury-prediction/${athlete.athleteId}`
             );
             if (!injuryResponse.ok) throw new Error(`Injury fetch error! status: ${injuryResponse.status}`);
             const injuryData = await injuryResponse.json();

@@ -34,137 +34,35 @@ const fallbackAthleteData = {
   3: { id: 3, athleteName: 'Mike Johnson', sport: 'Track', role: 'Sprinter', age: 28, education: 'MS in Exercise Science', careerGoals: ['Olympian', 'Trainer'], performance: 'Very Good', injuryHistory: [], competitionHistory: [] }
 };
 
-// Updated resource mapping with sport-specific tools by guidance level (unchanged)
+// Resource mapping for career goals
 const careerResources = {
-  'Basketball': {
-    'Build Elite Potential': [
-      { name: 'NBA Combine Training', url: 'https://www.nba.com/combine', desc: 'Prepare for professional tryouts.' },
-      { name: 'Hoop Skills Camps', url: 'https://www.hoopskills.com', desc: 'Develop fundamental skills.' },
-      { name: 'Strength & Conditioning Guide', url: 'https://www.nsca.com', desc: 'Build physical foundation.' },
-    ],
-    'Competition Ready': [
-      { name: 'Basketball Analytics (Synergy)', url: 'https://www.synergysports.com', desc: 'Analyze game footage.' },
-      { name: 'AAU Tournaments', url: 'https://www.aausports.org', desc: 'Gain competitive exposure.' },
-      { name: 'ScoutMe App', url: 'https://www.scoutme.com', desc: 'Connect with scouts.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'NBA G League Opportunities', url: 'https://gleague.nba.com', desc: 'Maintain pro-level play.' },
-      { name: 'Injury Prevention Workshops', url: 'https://www.sportsinjuryclinic.net', desc: 'Sustain career longevity.' },
-      { name: 'Basketball Coaching Cert', url: 'https://www.usab.com', desc: 'Transition to coaching.' },
-    ],
-  },
-  'Swimming': {
-    'Build Elite Potential': [
-      { name: 'USA Swimming Drills', url: 'https://www.usaswimming.org', desc: 'Master stroke technique.' },
-      { name: 'Swim Camps', url: 'https://www.swimclinics.com', desc: 'Intensive skill training.' },
-      { name: 'Endurance Training Plans', url: 'https://www.active.com', desc: 'Boost aerobic capacity.' },
-    ],
-    'Competition Ready': [
-      { name: 'SwimSwam Meet Results', url: 'https://swimswam.com', desc: 'Track performance benchmarks.' },
-      { name: 'FINA Events', url: 'https://www.fina.org', desc: 'Compete internationally.' },
-      { name: 'Swim Coach App', url: 'https://www.swimcoachapp.com', desc: 'Plan race strategies.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Masters Swimming', url: 'https://www.usms.org', desc: 'Stay competitive long-term.' },
-      { name: 'Dryland Training Guide', url: 'https://www.swimmingworldmagazine.com', desc: 'Prevent shoulder injuries.' },
-      { name: 'Coaching Certification', url: 'https://www.teamusa.org', desc: 'Shift to coaching.' },
-    ],
-  },
-  'Track': {
-    'Build Elite Potential': [
-      { name: 'USATF Training Plans', url: 'https://www.usatf.org', desc: 'Develop speed and stamina.' },
-      { name: 'Sprint Technique Camps', url: 'https://www.trackcamps.com', desc: 'Refine form.' },
-      { name: 'Plyometric Workouts', url: 'https://www.stack.com', desc: 'Increase explosiveness.' },
-    ],
-    'Competition Ready': [
-      { name: 'Track & Field News', url: 'https://www.trackandfieldnews.com', desc: 'Monitor rankings.' },
-      { name: 'IAAF Competitions', url: 'https://www.worldathletics.org', desc: 'Enter elite races.' },
-      { name: 'Race Analysis Tools', url: 'https://www.hudl.com', desc: 'Review performance.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Masters Track Events', url: 'https://www.usatf.org', desc: 'Compete as a veteran.' },
-      { name: 'Injury Rehab Resources', url: 'https://www.runnersworld.com', desc: 'Maintain leg health.' },
-      { name: 'USATF Coaching Cert', url: 'https://www.usatf.org', desc: 'Become a trainer.' },
-    ],
-  },
-  'Cricket': {
-    'Build Elite Potential': [
-      { name: 'ECB Skill Drills', url: 'https://www.ecb.co.uk', desc: 'Hone batting/bowling skills.' },
-      { name: 'Cricket Academy Camps', url: 'https://www.cricketaustralia.com.au', desc: 'Intensive training.' },
-      { name: 'Fitness for Cricket', url: 'https://www.pitchvision.com', desc: 'Build match fitness.' },
-    ],
-    'Competition Ready': [
-      { name: 'Cricbuzz Stats', url: 'https://www.cricbuzz.com', desc: 'Track performance metrics.' },
-      { name: 'ICC Tournaments', url: 'https://www.icc-cricket.com', desc: 'Gain global exposure.' },
-      { name: 'Video Analysis Tools', url: 'https://www.dartfish.com', desc: 'Analyze match play.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Veteran Cricket Leagues', url: 'https://www.mastersgames.com', desc: 'Stay in the game.' },
-      { name: 'Bowling Injury Prevention', url: 'https://www.physio-pedia.com', desc: 'Protect shoulders.' },
-      { name: 'ECB Coaching Pathway', url: 'https://www.ecb.co.uk', desc: 'Transition to coaching.' },
-    ],
-  },
-  'Kabaddi': {
-    'Build Elite Potential': [
-      { name: 'Kabaddi Academy Drills', url: 'https://www.kabaddiindia.in', desc: 'Master raid/tackle.' },
-      { name: 'Strength Training Plans', url: 'https://www.bodybuilding.com', desc: 'Build power.' },
-      { name: 'Agility Workouts', url: 'https://www.sportfitnessadvisor.com', desc: 'Enhance quickness.' },
-    ],
-    'Competition Ready': [
-      { na2me: 'Pro Kabaddi Stats', url: 'https://www.prokabaddi.com', desc: 'Analyze match performance.' },
-      { name: 'IKF Events', url: 'https://www.kabaddiikf.com', desc: 'Compete internationally.' },
-      { name: 'Kabaddi Scout Network', url: 'https://www.kabaddiscout.com', desc: 'Get noticed.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Veteran Kabaddi Leagues', url: 'https://www.kabaddiindia.in', desc: 'Keep playing.' },
-      { name: 'Knee Injury Prevention', url: 'https://www.sportsinjuryclinic.net', desc: 'Sustain mobility.' },
-      { name: 'Kabaddi Coaching Cert', url: 'https://www.kabaddiikf.com', desc: 'Coach others.' },
-    ],
-  },
-  'Football': {
-    'Build Elite Potential': [
-      { name: 'NFL Combine Prep', url: 'https://www.nfl.com/combine', desc: 'Train for pro standards.' },
-      { name: 'Football Skills Camps', url: 'https://www.footballcamps.com', desc: 'Refine techniques.' },
-      { name: 'Speed Training Plans', url: 'https://www.active.com', desc: 'Boost sprint speed.' },
-    ],
-    'Competition Ready': [
-      { name: 'FIFA Match Analysis', url: 'https://www.fifa.com', desc: 'Study game footage.' },
-      { name: 'Scout Connections', url: 'https://www.footballscouts.com', desc: 'Link with recruiters.' },
-      { name: 'Regional Tournaments', url: 'https://www.ussoccer.com', desc: 'Showcase talent.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Masters Football Leagues', url: 'https://www.usasa.com', desc: 'Play competitively.' },
-      { name: 'Hamstring Rehab Guide', url: 'https://www.webmd.com', desc: 'Maintain leg health.' },
-      { name: 'FIFA Coaching Cert', url: 'https://www.fifa.com', desc: 'Become a coach.' },
-    ],
-  },
-  'General': {
-    'Build Elite Potential': [
-      { name: 'Sports Performance Training', url: 'https://www.nsca.com', desc: 'Build athletic base.' },
-      { name: 'Athlete Network', url: 'https://www.athletenetwork.com', desc: 'Connect with mentors.' },
-      { name: 'Fitness Tracking Apps', url: 'https://www.strava.com', desc: 'Monitor progress.' },
-    ],
-    'Competition Ready': [
-      { name: 'Sports Career Finder', url: 'https://www.sportscareerfinder.com', desc: 'Find opportunities.' },
-      { name: 'Competition Listings', url: 'https://www.active.com', desc: 'Enter events.' },
-      { name: 'Performance Analytics', url: 'https://www.hudl.com', desc: 'Review stats.' },
-    ],
-    'Refine and Sustain': [
-      { name: 'Veteran Sports Programs', url: 'https://www.teamusa.org', desc: 'Stay active.' },
-      { name: 'Injury Prevention Tips', url: 'https://www.mayoclinic.org', desc: 'Protect longevity.' },
-      { name: 'Coaching Basics Course', url: 'https://www.ukcoaching.org', desc: 'Teach others.' },
-    ],
-  },
+  'Professional Athlete': [
+    { name: 'LinkedIn Sports Jobs', url: 'https://www.linkedin.com/jobs/sports-jobs' },
+    { name: 'TeamWork Online', url: 'https://www.teamworkonline.com' },
+  ],
+  'Coach': [
+    { name: 'USA Coaching Certification', url: 'https://www.usacoaching.org' },
+    { name: 'National Coaching Courses', url: 'https://www.ukcoaching.org' },
+  ],
+  'Olympian': [
+    { name: 'Olympic Training Programs', url: 'https://www.teamusa.org' },
+    { name: 'International Olympic Committee', url: 'https://olympics.com/ioc' },
+  ],
+  'Trainer': [
+    { name: 'NASM Certification', url: 'https://www.nasm.org' },
+    { name: 'ACE Fitness', url: 'https://www.acefitness.org' },
+  ],
 };
 
 // Helper function to calculate competition wins
 const calculateCompetitionWins = (competitionHistory) => {
   if (!competitionHistory || !Array.isArray(competitionHistory) || competitionHistory.length === 0) return 0;
   return competitionHistory.filter(comp => {
-    const result = comp.result?.toLowerCase().trim(); // Remove leading/trailing spaces
-    return result === '1st' || result === 'win' || result === 'first' || result.includes('1st place');
+    const result = comp.result?.toLowerCase();
+    return result === '1st' || result === 'win';
   }).length;
 };
+
 // Calculate Performance Efficiency Score (0-100) with role as parameter
 const calculatePerformanceEfficiency = (hoursTrained, sessionsPerWeek, restDays, competitionWins, sport, role) => {
   const maxHours = sport === 'Swimming' ? 30 : sport === 'Basketball' ? 25 : sport === 'Cricket' && role === 'Bowler' ? 25 : 20;
@@ -190,7 +88,7 @@ const analyzePerformanceTrends = (performanceData, sport) => {
 // Generate sport-specific performance recommendations
 const generatePerformanceRecommendations = (athleteData, performanceData) => {
   const latest = performanceData[performanceData.length - 1] || {};
-  const { sport, competitionHistory, role = 'General' } = athleteData;
+  const { sport, competitionHistory, role = 'General' } = athleteData; // Default role to 'General'
   const { hoursTrained = 0, sessionsPerWeek = 0, restDays = 0 } = latest;
   const wins = calculateCompetitionWins(competitionHistory);
   const efficiency = calculatePerformanceEfficiency(hoursTrained, sessionsPerWeek, restDays, wins, sport, role);
@@ -234,7 +132,6 @@ function AthleteDetailPage() {
   const [injuryPrediction, setInjuryPrediction] = useState(null);
   const [performanceSuggestion, setPerformanceSuggestion] = useState('');
   const [injuryPreventionSuggestion, setInjuryPreventionSuggestion] = useState('');
-  const [calculatedRecoveryScore, setCalculatedRecoveryScore] = useState(null);
   const [careerGuidance, setCareerGuidance] = useState({ guidance: '', probabilities: [], analysis: '', yearsToGoal: 0 });
   const [financialPlanning, setFinancialPlanning] = useState({ advice: '', probabilities: [], analysis: '' });
   const [trainingSchedule, setTrainingSchedule] = useState(null);
@@ -376,7 +273,7 @@ function AthleteDetailPage() {
         };
         const response = await axios.post('http://localhost:3000/api/ai/career-guidance', careerInput);
         const { careerGuidance: guidance, probabilities } = response.data;
-        const sport = athlete.sport || 'General';
+        const sport = athlete.sport || 'your sport';
         const education = athlete.education || 'Not specified';
         const careerGoals = athlete.careerGoals || ['Not specified'];
         const hoursTrained = careerInput.hoursTrained;
@@ -418,62 +315,56 @@ function AthleteDetailPage() {
     if (athleteData && performanceData.length > 0) fetchCareerGuidance();
   }, [athleteData, performanceData]);
 
-  // Fetch financial planning (Updated to use ₹)
- // Inside AthleteDetailPage component
-useEffect(() => {
-  const fetchFinancialPlanning = async () => {
-    try {
-      const trainResponse = await axios.get('http://localhost:3000/finance/financial-train');
-      if (trainResponse.data.message !== 'Financial model trained successfully and stored in memory') {
-        throw new Error('Financial model training failed: ' + trainResponse.data.message);
+  // Fetch financial planning
+  useEffect(() => {
+    const fetchFinancialPlanning = async () => {
+      try {
+        const trainResponse = await axios.get('http://localhost:3000/finance/financial-train');
+        if (trainResponse.data.message !== 'Financial model trained successfully and stored in memory') {
+          throw new Error('Financial model training failed: ' + trainResponse.data.message);
+        }
+        const athlete = athleteData || {};
+        const latestPerformance = performanceData.length > 0 ? performanceData[performanceData.length - 1] : null;
+        const competitionWins = calculateCompetitionWins(athlete.competitionHistory);
+        const financialInput = {
+          age: athlete.age || 0,
+          currentIncome: athlete.currentIncome || 0,
+          expenses: latestPerformance?.expenses || 0,
+          savings: athlete.savings || 0,
+          sport: athlete.sport || 'unknown',
+          competitionWins,
+          injuryCount: latestPerformance?.pastInjuries || athlete.injuryHistory?.length || 0,
+          careerGoals: athlete.careerGoals || ['Not specified'],
+        };
+        const response = await axios.post('http://localhost:3000/finance/financial-guidance', financialInput);
+        const { financialAdvice: advice, probabilities } = response.data;
+        const { age, currentIncome: income, expenses, savings, sport, injuryCount, careerGoals } = financialInput;
+
+        const annualSurplus = income - expenses;
+        const savingsTarget = income * 0.25;
+        const injuryRiskCost = injuryCount > 0 ? expenses * 0.3 : 0;
+        const savingsIn10Years = savings * (1 + 0.05) ** 10;
+
+        let analysis = `<h3 class="text-purple-400 text-lg font-semibold">Financial Planning Analysis (Age ${age}, ${sport})</h3><p class="mt-2"><strong class="text-gray-300">Current Profile:</strong> Income: <span class="text-green-400">$${income}/year</span>, Expenses: <span class="text-red-400">$${expenses}/year</span>, Savings: <span class="text-yellow-300">$${savings}</span>, Wins: ${competitionWins}, Injuries: ${injuryCount}. <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}</p>`;
+        analysis += `<h4 class="text-teal-400 mt-4">Build Emergency Savings (Probability: ${Math.round(probabilities[0] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> Your <span class="text-yellow-300">$${annualSurplus} surplus</span> ${annualSurplus > 0 ? '<span class="text-green-400">supports saving</span>' : '<span class="text-red-400">requires expense cuts</span>'}. Injuries may cost <span class="text-red-400">$${injuryRiskCost}/year</span>.</li><li><strong class="text-gray-300">How:</strong> Save <span class="text-green-400">$${savingsTarget.toFixed(0)}/year</span> (25% of income).</li></ul>`;
+        analysis += `<h4 class="text-green-400 mt-4">Invest for Future Growth (Probability: ${Math.round(probabilities[1] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> With <span class="text-yellow-300">$${savings}</span>, ${income > expenses ? '<span class="text-green-400">you can grow wealth</span>' : '<span class="text-red-400">investing waits until surplus increases</span>'}.</li><li><strong class="text-gray-300">How:</strong> Invest <span class="text-green-400">$${Math.min(savings * 0.5, 5000).toFixed(0)}</span> in an S&P 500 ETF.</li></ul>`;
+        analysis += `<h4 class="text-orange-400 mt-4">Optimize Expenses (Probability: ${Math.round(probabilities[2] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> <span class="text-red-400">$${expenses}</span> is ${expenses > income * 0.6 ? '<span class="text-red-400">over 60% of income</span>' : '<span class="text-green-400">manageable</span>'}.</li><li><strong class="text-gray-300">How:</strong> Cut <span class="text-green-400">$${(expenses * 0.3).toFixed(0)}</span> (30%) via shared training costs.</li></ul>`;
+        analysis += `<p class="mt-4"><strong class="text-gray-300">Summary:</strong> In 10 years, savings could grow to <span class="text-green-400">$${savingsIn10Years.toFixed(0)}</span> at 5% APY.</p>`;
+
+        setFinancialPlanning({ advice, probabilities, analysis });
+      } catch (err) {
+        console.error('Error fetching financial planning:', err);
+        setError(prev => prev ? `${prev} | Financial planning error: ${err.message}` : `Financial planning error: ${err.message}`);
+        setFinancialPlanning({ advice: 'Unable to analyze financial plan at this time.', probabilities: [], analysis: '' });
       }
-      const athlete = athleteData || {};
-      const latestPerformance = performanceData.length > 0 ? performanceData[performanceData.length - 1] : null;
-      const competitionWins = calculateCompetitionWins(athlete.competitionHistory);
-      const financialInput = {
-        age: athlete.age || 0,
-        currentIncome: athlete.currentIncome || 0,
-        expenses: latestPerformance?.expenses || 0, // This will be overridden below
-        savings: athlete.savings || 0,
-        sport: athlete.sport || 'unknown',
-        competitionWins,
-        injuryCount: latestPerformance?.pastInjuries || athlete.injuryHistory?.length || 0,
-        careerGoals: athlete.careerGoals || ['Not specified'],
-      };
-      const response = await axios.post('http://localhost:3000/finance/financial-guidance', financialInput);
-      const { financialAdvice: advice, probabilities } = response.data;
-      const { age, currentIncome: income, savings, sport, injuryCount, careerGoals } = financialInput;
+    };
 
-      // Redefine expenses as income - savings
-      const expenses = income - savings;
-
-      const annualSurplus = income - expenses; // This becomes savings, but we'll keep the variable name for consistency
-      const savingsTarget = income * 0.25;
-      const injuryRiskCost = injuryCount > 0 ? expenses * 0.3 : 0;
-      const savingsIn10Years = savings * (1 + 0.05) ** 10;
-
-      let analysis = `<h3 class="text-purple-400 text-lg font-semibold">Financial Planning Analysis (Age ${age}, ${sport})</h3><p class="mt-2"><strong class="text-gray-300">Current Profile:</strong> Income: <span class="text-green-400">₹${income}/year</span>, Expenses: <span class="text-red-400">₹${expenses}/year</span>, Savings: <span class="text-yellow-300">₹${savings}</span>, Wins: ${competitionWins}, Injuries: ${injuryCount}. <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}</p>`;
-      analysis += `<h4 class="text-teal-400 mt-4">Build Emergency Savings (Probability: ${Math.round(probabilities[0] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> Your <span class="text-yellow-300">₹${annualSurplus} surplus</span> ${annualSurplus > 0 ? '<span class="text-green-400">supports saving</span>' : '<span class="text-red-400">requires expense cuts</span>'}. Injuries may cost <span class="text-red-400">₹${injuryRiskCost}/year</span>.</li><li><strong class="text-gray-300">How:</strong> Save <span class="text-green-400">₹${savingsTarget.toFixed(0)}/year</span> (25% of income).</li></ul>`;
-      analysis += `<h4 class="text-green-400 mt-4">Invest for Future Growth (Probability: ${Math.round(probabilities[1] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> With <span class="text-yellow-300">₹${savings}</span>, ${income > expenses ? '<span class="text-green-400">you can grow wealth</span>' : '<span class="text-red-400">investing waits until surplus increases</span>'}.</li><li><strong class="text-gray-300">How:</strong> Invest <span class="text-green-400">₹${Math.min(savings * 0.5, 5000).toFixed(0)}</span> in a mutual fund or ETF (e.g., NIFTY 50).</li></ul>`;
-      analysis += `<h4 class="text-orange-400 mt-4">Optimize Expenses (Probability: ${Math.round(probabilities[2] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> <span class="text-red-400">₹${expenses}</span> is ${expenses > income * 0.6 ? '<span class="text-red-400">over 60% of income</span>' : '<span class="text-green-400">manageable</span>'}.</li><li><strong class="text-gray-300">How:</strong> Cut <span class="text-green-400">₹${(expenses * 0.3).toFixed(0)}</span> (30%) via shared training costs or local resources.</li></ul>`;
-      analysis += `<p class="mt-4"><strong class="text-gray-300">Summary:</strong> In 10 years, savings could grow to <span class="text-green-400">₹${savingsIn10Years.toFixed(0)}</span> at 5% APY.</p>`;
-
-      setFinancialPlanning({ advice, probabilities, analysis });
-    } catch (err) {
-      console.error('Error fetching financial planning:', err);
-      setError(prev => prev ? `${prev} | Financial planning error: ${err.message}` : `Financial planning error: ${err.message}`);
-      setFinancialPlanning({ advice: 'Unable to analyze financial plan at this time.', probabilities: [], analysis: '' });
-    }
-  };
-
-  if (athleteData && performanceData.length > 0) fetchFinancialPlanning();
-}, [athleteData, performanceData]);
+    if (athleteData && performanceData.length > 0) fetchFinancialPlanning();
+  }, [athleteData, performanceData]);
 
   // Generate performance analysis
   useEffect(() => {
     if (athleteData && performanceData.length > 0) {
-      console.log('Performance Data:', performanceData);
-      console.log('Athlete Data:', athleteData);
       const trendAnalysis = analyzePerformanceTrends(performanceData, athleteData.sport);
       const { efficiency, recommendations } = generatePerformanceRecommendations(athleteData, performanceData);
       const latest = performanceData[performanceData.length - 1];
@@ -496,7 +387,6 @@ useEffect(() => {
   const generatePreventionSuggestions = (injuryPrediction, athleteData, perfData) => {
     if (!injuryPrediction || !perfData.length) {
       setInjuryPreventionSuggestion('No specific prevention recommendation available.');
-      setCalculatedRecoveryScore(null);
       return;
     }
 
@@ -505,8 +395,9 @@ useEffect(() => {
     const sessionsPerWeek = latestPerf.sessionsPerWeek || 4;
     const restDays = latestPerf.restDays || 0;
     const sport = athleteData.sport || 'General';
-    const role = athleteData.role || 'General';
+    const role = athleteData.role || 'General'; // Default to 'General' if undefined
 
+    // Sport-specific thresholds
     const sportThresholds = {
       Swimming: { maxHours: 30, minRestDays: 2, maxSessions: 7, commonInjury: 'shoulder strain' },
       Basketball: { maxHours: 25, minRestDays: 2, maxSessions: 6, commonInjury: 'knee/ankle sprain' },
@@ -523,14 +414,19 @@ useEffect(() => {
     };
     const thresholds = sportThresholds[sport] || sportThresholds.General;
 
+    // Step 1: Monitor training load with sport-specific rules
     const trainingWarnings = monitorTrainingLoad(hoursTrained, sessionsPerWeek, restDays, thresholds, injuryPrediction);
+
+    // Step 2: Calculate intensity and recovery score with injury risk adjustment
     const intensity = calculateIntensity(sessionsPerWeek, sport);
     const recoveryScore = calculateRecoveryScore(restDays, intensity, injuryPrediction.predictionScore || 0);
+
+    // Step 3: Generate recovery and risk-based suggestions
     const recoverySuggestions = getRecoverySuggestions(recoveryScore, thresholds, injuryPrediction, sport, role);
 
+    // Combine all suggestions
     const preventionSuggestion = [...trainingWarnings, recoverySuggestions].join(' ');
     setInjuryPreventionSuggestion(preventionSuggestion || 'No immediate action required—monitor trends.');
-    setCalculatedRecoveryScore(recoveryScore);
   };
 
   // Helper function: Monitor training load with sport-specific thresholds and injury risk
@@ -589,13 +485,13 @@ useEffect(() => {
     };
 
     if (score < 30 && riskLevel === 'high') {
-      return `Critical recovery deficit (score: ${score.toFixed(1)})—prioritize 2-3 rest days this week and target ${thresholds.commonInjury} prevention (e.g., ${preventionTip[sport] || preventionTip.General}).`;
+      return `Critical recovery deficit (score: ${score})—prioritize 2-3 rest days this week and target ${thresholds.commonInjury} prevention (e.g., ${preventionTip[sport] || preventionTip.General}).`;
     } else if (score < 50) {
-      return `Low recovery (score: ${score.toFixed(1)})—increase rest days by 1 or reduce intensity to protect against ${thresholds.commonInjury}.`;
+      return `Low recovery (score: ${score})—increase rest days by 1 or reduce intensity to protect against ${thresholds.commonInjury}.`;
     } else if (riskLevel === 'high') {
-      return `High injury risk detected despite decent recovery (score: ${score.toFixed(1)})—add preventive measures for ${thresholds.commonInjury} (e.g., ${preventionTip[sport] || preventionTip.General}).`;
+      return `High injury risk detected despite decent recovery (score: ${score})—add preventive measures for ${thresholds.commonInjury} (e.g., ${preventionTip[sport] || preventionTip.General}).`;
     } else {
-      return `Recovery adequate (score: ${score.toFixed(1)})—maintain routine, monitor for ${thresholds.commonInjury}.`;
+      return `Recovery adequate (score: ${score})—maintain routine, monitor for ${thresholds.commonInjury}.`;
     }
   };
 
@@ -645,7 +541,7 @@ useEffect(() => {
           data.restDays || 0,
           calculateCompetitionWins(athleteData?.competitionHistory || []),
           athleteData?.sport || 'General',
-          athleteData?.role || 'General'
+          athleteData?.role || 'General' // Pass role here
         )
       ),
       backgroundColor: 'rgba(54, 162, 235, 0.6)',
@@ -690,7 +586,7 @@ useEffect(() => {
     datasets: [
       {
         label: 'Metrics',
-        data: [trainingMetrics.trainingLoad, calculatedRecoveryScore || trainingMetrics.recoveryScore],
+        data: [trainingMetrics.trainingLoad, trainingMetrics.recoveryScore],
         backgroundColor: ['#36A2EB', '#FF6384'],
       },
     ],
@@ -794,7 +690,10 @@ useEffect(() => {
           </button>
           {activeSection === 'injury' && (
             <div className="p-4">
+              <p><strong>Risk Level:</strong> <span className={trainingMetrics.riskFlag === 'High Risk' ? 'text-red-400' : trainingMetrics.riskFlag === 'Moderate Risk' ? 'text-yellow-400' : 'text-green-400'}>{trainingMetrics.riskFlag}</span></p>
               <p className="mt-2">{trainingMetrics.insights.trainingLoad}</p>
+              <p className="mt-2">{trainingMetrics.insights.recoveryScore}</p>
+              <p className="mt-2">{trainingMetrics.insights.riskFlag}</p>
               <div className="mt-4">
                 <h3 className="text-lg font-medium text-blue-400">Recommendations</h3>
                 <ul className="list-disc pl-5 mt-2">
@@ -834,26 +733,15 @@ useEffect(() => {
               )}
               {injuryPrediction ? (
                 <div className="mt-4">
-                  {calculatedRecoveryScore !== null && (
-                    <p className="mt-2">
-                      <strong>Recovery Score:</strong>{' '}
-                      <span className={calculatedRecoveryScore < 30 ? 'text-red-400' : calculatedRecoveryScore < 50 ? 'text-yellow-400' : 'text-green-400'}>
-                        {calculatedRecoveryScore.toFixed(1)}
-                      </span>{' '}
-                      {calculatedRecoveryScore < 30 ? '(Poor recovery)' : calculatedRecoveryScore < 50 ? '(Low recovery)' : '(Adequate recovery)'}
-                    </p>
-                  )}
-                  <p className="mt-2">
-                    <strong>Injury Risk:</strong>{' '}
-                    <span
-                      className={
-                        injuryPrediction.injuryRisk.includes('High') || injuryPrediction.injuryRisk.includes('Critical')
-                          ? 'text-red-400'
-                          : injuryPrediction.injuryRisk.includes('Moderate') || injuryPrediction.injuryRisk.includes('Medium')
-                          ? 'text-yellow-400'
-                          : 'text-green-400'
-                      }
-                    >
+                  <p>
+                    <strong>Risk:</strong>{' '}
+                    <span className={
+                      injuryPrediction.injuryRisk.includes('High') || injuryPrediction.injuryRisk.includes('Critical') 
+                        ? 'text-red-400' 
+                        : injuryPrediction.injuryRisk.includes('Moderate') || injuryPrediction.injuryRisk.includes('Medium') 
+                        ? 'text-yellow-400' 
+                        : 'text-green-400'
+                    }>
                       {injuryPrediction.injuryRisk}
                     </span>
                     {injuryPrediction.predictionScore && ` (${Math.round(injuryPrediction.predictionScore * 100)}%)`}
@@ -917,26 +805,22 @@ useEffect(() => {
                   <div className="h-64 mt-4">
                     <Bar data={careerProbabilityData} options={careerProbabilityOptions} />
                   </div>
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium text-blue-400">Career Tools ({athleteData.sport || 'General'})</h3>
-                    <ul className="list-disc pl-5 mt-2">
-                      {careerResources[athleteData.sport]?.[careerGuidance.guidance]?.map((resource, index) => (
-                        <li key={index} className="text-gray-300">
-                          <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                            {resource.name}
-                          </a>
-                          <span className="text-gray-400"> - {resource.desc}</span>
-                        </li>
-                      )) || careerResources['General'][careerGuidance.guidance].map((resource, index) => (
-                        <li key={index} className="text-gray-300">
-                          <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                            {resource.name}
-                          </a>
-                          <span className="text-gray-400"> - {resource.desc}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  {athleteData.careerGoals?.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-lg font-medium text-blue-400">Resources</h3>
+                      <ul className="list-disc pl-5 mt-2">
+                        {athleteData.careerGoals.flatMap(goal =>
+                          careerResources[goal]?.map((resource, index) => (
+                            <li key={index}>
+                              <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                                {resource.name}
+                              </a>
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                    </div>
+                  )}
                 </>
               ) : (
                 <p className="text-gray-400">Analyzing career guidance...</p>
@@ -961,8 +845,8 @@ useEffect(() => {
                   <p className="text-lg"><strong className="text-gray-300">Strategy:</strong> <span className="text-purple-400">{financialPlanning.advice}</span></p>
                   <ul className="list-disc pl-5 mt-4 text-sm">
                     <li><strong className="text-gray-300">Build Savings:</strong> <span className="text-teal-400">{Math.round(financialPlanning.probabilities[0] * 100)}%</span></li>
-                    <li><strong className="text-gray-300">Invest for Growth:</strong> <span className="text-green-400">{Math.round(financialPlanning.probabilities[1] * 100)}%</span></li>
-                    <li><strong className="text-gray-300">Optimize Expenses:</strong> <span className="text-orange-400">{Math.round(financialPlanning.probabilities[2] * 100)}%</span></li>
+                    <li><strong class="text-gray-300">Invest for Growth:</strong> <span className="text-green-400">${Math.round(financialPlanning.probabilities[1] * 100)}%</span></li>
+                    <li><strong class="text-gray-300">Optimize Expenses:</strong> <span className="text-orange-400">${Math.round(financialPlanning.probabilities[2] * 100)}%</span></li>
                   </ul>
                   <div className="mt-4 text-sm" dangerouslySetInnerHTML={{ __html: financialPlanning.analysis }} />
                 </>

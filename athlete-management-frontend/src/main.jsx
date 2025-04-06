@@ -11,10 +11,10 @@ root.render(
   <StrictMode>
     <BrowserRouter>
       <Auth0Provider
-        domain="dev-6qk83ogv0ykpxkkr.us.auth0.com"
-        clientId="Bcxbaye7UIEd9i0qtlo6m41Rzn6UU35E"
+        domain={`${import.meta.env.VITE_AUTH0_DOMAIN}`} // Using ${} for explicit interpolation
+        clientId={`${import.meta.env.VITE_AUTH0_CLIENT_ID}`} // Using ${} for explicit interpolation
         authorizationParams={{
-          redirect_uri: 'http://localhost:5173', // Explicitly set to match your frontend
+          redirect_uri: `${import.meta.env.VITE_AUTH0_REDIRECT_URI}`, // Using ${} for explicit interpolation
         }}
       >
         <App />

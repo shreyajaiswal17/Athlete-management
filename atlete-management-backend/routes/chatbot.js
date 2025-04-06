@@ -2,7 +2,7 @@ import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const router = express.Router();
-const apiKey = 'AIzaSyBxE8dyrygRc8USvlF_XJ4LvJmDqMG0cdg';
+const apiKey = process.env.GOOGLE_API_KEY; // Ensure this is set in your environment variables
 const genAI = new GoogleGenerativeAI(apiKey);
 
 const model = genAI.getGenerativeModel({

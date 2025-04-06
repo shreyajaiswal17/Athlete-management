@@ -525,7 +525,108 @@ router.put('/performance/:performanceId', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+// PUT /api/athlete/performance/update/:athleteId
+router.put('/performance/update/:athleteId', async (req, res) => {
+  try {
+    const { hoursTrained, sessionsPerWeek, restDays } = req.body;
+    const athleteId = req.params.athleteId;
+    if (hoursTrained === undefined || sessionsPerWeek === undefined) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
 
+    const parsedHoursTrained = parseFloat(hoursTrained);
+    const parsedSessionsPerWeek = parseFloat(sessionsPerWeek);
+    const parsedRestDays = parseFloat(restDays || 0);
+    const parsedIntensity = 2 * parsedSessionsPerWeek;
+
+    if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) || 
+        parsedHoursTrained < 0 || parsedSessionsPerWeek < 0) {
+      return res.status(400).json({ message: 'Performance fields must be positive numbers' });
+    }
+
+    const athlete = await Athlete.findById(athleteId);
+    if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
+    let performance = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
+    if (!performance) {
+      performance = new AthleteData({ 
+        athleteId: athlete._id, 
+        hoursTrained: parsedHoursTrained, 
+        sessionsPerWeek: parsedSessionsPerWeek, 
+        restDays: parsedRestDays, 
+        intensity: parsedIntensity,
+        timestamp: new Date()
+      });
+    } else {
+      performance.hoursTrained = parsedHoursTrained;
+      performance.sessionsPerWeek = parsedSessionsPerWeek;
+      performance.restDays = parsedRestDays;
+      performance.intensity = parsedIntensity;
+      performance.timestamp = new Date();
+    }
+
+    const input = [
+      parsedHoursTrained,
+      parsedSessionsPerWeek,
+      athlete.injuryHistory.length,
+      parsedRestDays,
+      parseFloat(athlete.age || 0)
+    ];
+    performance.riskFlag = predictRiskFlag(input);
+    const { value: exertionLevel, category: exertionCategory } = calculateExertionLevel(
+      parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
+    );
+    performance.exertionLevel = exertionLevel;
+    performance.exertionCategory = exertionCategory;
+    await performance.save();
+    console.log(`Updated/Created Performance (by athleteId):`, performance.toObject());
+
+    const lastInjuryDate = athlete.injuryHistory.length > 0
+      ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
+      : 0;
+    const daysSinceLastInjury = lastInjuryDate ? (Date.now() - lastInjuryDate) / (1000 * 60 * 60 * 24) : 1000;
+
+    const injuryInput = [...input, parseFloat(daysSinceLastInjury)];
+    const normalizedInput = normalizeInput(injuryInput);
+    const tensor = tf.tensor2d([normalizedInput], [1, 6], 'float32');
+    const injuryPrediction = injuryModel.predict(tensor).dataSync()[0];
+    const { riskLevel, recommendation, explanation } = generatePreventionRecommendation(injuryPrediction, injuryInput, athlete.sport);
+
+    const pastData = await AthleteData.find({ athleteId: athlete._id }).sort({ timestamp: -1 }).limit(3);
+    const avgHours = pastData.length > 0 ? pastData.reduce((sum, d) => sum + d.hoursTrained, 0) / pastData.length : 0;
+    const trend = parsedHoursTrained > avgHours ? `increased by ${(parsedHoursTrained - avgHours).toFixed(1)} hours` : 'stable';
+    const fatigueIndex = Math.min(100, Math.max(0, (parsedHoursTrained * 0.5) + (parsedSessionsPerWeek * 5) - (parsedRestDays * 10)));
+
+    res.status(200).json({
+      message: 'Performance updated successfully',
+      performance: { 
+        athleteId: athlete._id, 
+        hoursTrained: parsedHoursTrained, 
+        sessionsPerWeek: parsedSessionsPerWeek, 
+        restDays: parsedRestDays, 
+        pastInjuries: athlete.injuryHistory.length, 
+        riskFlag: performance.riskFlag,
+        exertionLevel,
+        exertionCategory,
+        timestamp: performance.timestamp 
+      },
+      analysis: { 
+        riskFlag: performance.riskFlag, 
+        injuryRisk: riskLevel, 
+        injuryPredictionScore: injuryPrediction, 
+        trendAnalysis: `Training load has ${trend}.`, 
+        fatigueIndex: `Fatigue index is ${fatigueIndex}, indicating ${fatigueIndex > 70 ? 'high fatigue' : 'manageable fatigue'}.`,
+        exertionLevel,
+        exertionCategory, 
+        preventionRecommendation: recommendation,
+        preventionExplanation: explanation
+      }
+    });
+  } catch (error) {
+    console.error('Error updating performance (by athleteId):', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 // POST /api/athlete/log-performance
 router.post('/log-performance', async (req, res) => {
   try {
