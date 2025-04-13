@@ -278,6 +278,7 @@ function AthleteDetailPage() {
           throw new Error('No performance data found in response');
         }
         const athlete = { ...performanceResponse.data.performanceData[0], role: performanceResponse.data.performanceData[0].role || 'General' };
+        // Sort all performance data by timestamp to ensure chronological order
         const sortedPerformanceData = performanceResponse.data.performanceData.sort(
           (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
         );
@@ -328,6 +329,8 @@ function AthleteDetailPage() {
 
   // Train the model and fetch training schedule
   useEffect(() => {
+    console.log('API URL:', import.meta.env.VITE_API_URL); // Debug log to verify the API URL
+    console.log(`${import.meta.env.VITE_API_URL}/training/train`);
     const trainModelAndFetchSchedule = async () => {
       try {
         const trainResponse = await axios.post(`${import.meta.env.VITE_API_URL}/training/train`, {
@@ -602,11 +605,39 @@ useEffect(() => {
   const chartData = {
     labels: performanceData.map(data => new Date(data.timestamp).toLocaleDateString()),
     datasets: [
-      { label: 'Hours Trained', data: performanceData.map(data => data.hoursTrained || 0), borderColor: 'rgba(75,192,192,1)', fill: false },
-      { label: 'Sessions Per Week', data: performanceData.map(data => data.sessionsPerWeek || 0), borderColor: 'rgba(153,102,255,1)', fill: false },
-      { label: 'Rest Days', data: performanceData.map(data => data.restDays || 0), borderColor: 'rgba(255,99,132,1)', fill: false },
+      {
+        label: 'Hours Trained',
+        data: performanceData.map(data => data.hoursTrained || 0),
+        borderColor: 'rgba(75,192,192,1)',
+        backgroundColor: 'rgba(75,192,192,0.2)', // Optional: slight fill under the line
+        fill: false, // Set to true if you want a filled area under the line
+        tension: 0.4, // Smooths the line for better trend visibility
+        pointRadius: 3, // Small dots at data points
+        borderWidth: 2, // Thicker line for clarity
+      },
+      {
+        label: 'Sessions Per Week',
+        data: performanceData.map(data => data.sessionsPerWeek || 0),
+        borderColor: 'rgba(153,102,255,1)',
+        backgroundColor: 'rgba(153,102,255,0.2)',
+        fill: false,
+        tension: 0.4,
+        pointRadius: 3,
+        borderWidth: 2,
+      },
+      {
+        label: 'Rest Days',
+        data: performanceData.map(data => data.restDays || 0),
+        borderColor: 'rgba(255,99,132,1)',
+        backgroundColor: 'rgba(255,99,132,0.2)',
+        fill: false,
+        tension: 0.4,
+        pointRadius: 3,
+        borderWidth: 2,
+      },
     ],
   };
+ 
 
   const chartOptions = {
     responsive: true,
@@ -1099,4 +1130,4 @@ useEffect(() => {
   );
 }
 
-export default AthleteDetailPage; 
+export default AthleteDetailPage;

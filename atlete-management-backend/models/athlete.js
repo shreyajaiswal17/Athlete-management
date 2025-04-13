@@ -40,6 +40,7 @@ const athleteSchema = new mongoose.Schema({
     startDate: Date,
     endDate: Date
   }],
+  team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
   // Store generated meal plan and hydration data
   mealPlan: [{
     totalCalories: Number,

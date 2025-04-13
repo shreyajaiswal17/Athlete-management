@@ -2,7 +2,10 @@ import express from 'express';
 import tf from '@tensorflow/tfjs';
 import Athlete from '../models/athlete.js';
 import AthleteData from '../models/athleteData.js';
-
+import Team from '../models/team.js';
+import dotenv from 'dotenv';
+import Event from '../models/event.js';
+dotenv.config();
 const router = express.Router();
 
 // Sport-specific demand multipliers
@@ -14,14 +17,45 @@ const sportMultipliers = {
   'Cricket': 1.0,
   'default': 1.0
 };
+const sportMaxHours = {
+  'Tennis': 40,
+  'Swimming': 60,
+  'Running': 50,
+  'Weightlifting': 30,
+  'Cricket': 45,
+  'default': 50
+};
 
-// Calculate exertion level with intensity and sport-specific factors
-const calculateExertionLevel = (hoursTrained, sessionsPerWeek, restDays, intensity, sport) => {
-  const sportMultiplier = sportMultipliers[sport] || sportMultipliers['default'];
-  const maxHours = 50;
-  const normalizationFactor = maxHours * 2;
+const calculateExertionLevel = async (athleteId, hoursTrained, sessionsPerWeek, restDays, intensity, sport) => {
+  const sportMultiplier = sportMultipliers[sport] || 1.0;
+  // Query by custom athleteId field instead of _id
+    const athlete = await Athlete.findOne({ athleteId: athleteId });
+    console.log("athlete", athlete);
+  const injuryHistory = athlete ? athlete.injuryHistory : [];
+console.log("injuryHistory", injuryHistory);
+  const trainingLoad = hoursTrained * intensity * sportMultiplier;
+  console.log("trainingLoad", trainingLoad);
+  const sessionImpact = sessionsPerWeek * Math.log(sessionsPerWeek + 1) * 3;
 
-  const rawExertion = (hoursTrained * intensity * sportMultiplier) + (sessionsPerWeek * 8) - (restDays * 20);
+  const recoveryImpact = restDays > 0 ? 4 * Math.log(restDays + 1) : 0;
+  let rawExertion = Math.max(0, trainingLoad + sessionImpact - recoveryImpact);
+
+  // Use athlete._id for querying past data if athlete exists
+  const pastData = athlete ? await AthleteData.findOne({ athleteId: athlete._id }).sort({ timestamp: -1 }).limit(3) : [];
+  let cumulativeAdjustment = 0;
+  pastData.forEach((data, index) => {
+    const decay = 0.5 ** (index + 1);
+    const pastExertion = (data.hoursTrained * data.intensity * sportMultiplier) + 
+                         (data.sessionsPerWeek * Math.log(data.sessionsPerWeek + 1) * 3) - 
+                         (data.restDays > 0 ? 4 * Math.log(data.restDays + 1) : 0);
+    cumulativeAdjustment += decay * Math.max(0, pastExertion);
+  });
+  rawExertion += Math.min(cumulativeAdjustment, 40);
+
+  const recentInjuries = injuryHistory.filter(i => (Date.now() - new Date(i.date).getTime()) / (1000 * 60 * 60 * 24) < 90).length;
+  rawExertion *= (1 + 0.05 * recentInjuries);
+
+  const normalizationFactor = sportMaxHours[sport] * 4;
   const exertionLevel = Math.min(100, Math.max(0, (rawExertion / normalizationFactor) * 100));
 
   if (exertionLevel > 88) return { value: exertionLevel, category: 'High' };
@@ -320,12 +354,13 @@ router.post('/create-athlete', async (req, res) => {
 });
 
 // GET /api/athlete/performance/:id
+// GET /api/athlete/performance/:id
 router.get('/performance/:id', async (req, res) => {
   try {
     const athlete = await Athlete.findById(req.params.id);
     if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
 
-    const performanceData = await AthleteData.find({ athleteId: req.params.id }).sort({ timestamp: -1 });
+    const performanceData = await AthleteData.find({ athleteId: req.params.id }).sort({ timestamp: 1 }); // Ascending order for chronological trend
     console.log(`Performance Data for ${athlete.name}:`, performanceData);
 
     res.json({
@@ -425,14 +460,24 @@ router.get('/data', async (req, res) => {
         }
       }
     ]);
+
     if (!enrichedData.length) return res.status(404).json({ message: 'No athletes found' });
-    res.status(200).json(enrichedData);
+
+    // Compute status for each athlete
+    const enrichedDataWithStatus = await Promise.all(
+      enrichedData.map(async (athlete) => {
+        const status = await calculateAthleteStatus(athlete.athleteId);
+        console.log(`Athlete ID: ${athlete.athleteId}, Name: ${athlete.athleteName}, Status: ${status}`); // Log athlete status
+        return { ...athlete, status };
+      })
+    );
+
+    res.status(200).json(enrichedDataWithStatus);
   } catch (error) {
     console.error('Error fetching athlete data:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 // PUT /api/athlete/performance/:performanceId
 router.put('/performance/:performanceId', async (req, res) => {
   try {
@@ -526,6 +571,7 @@ router.put('/performance/:performanceId', async (req, res) => {
   }
 });
 // PUT /api/athlete/performance/update/:athleteId
+// PUT /api/athlete/performance/update/:athleteId
 router.put('/performance/update/:athleteId', async (req, res) => {
   try {
     const { hoursTrained, sessionsPerWeek, restDays } = req.body;
@@ -547,24 +593,7 @@ router.put('/performance/update/:athleteId', async (req, res) => {
     const athlete = await Athlete.findById(athleteId);
     if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
 
-    let performance = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
-    if (!performance) {
-      performance = new AthleteData({ 
-        athleteId: athlete._id, 
-        hoursTrained: parsedHoursTrained, 
-        sessionsPerWeek: parsedSessionsPerWeek, 
-        restDays: parsedRestDays, 
-        intensity: parsedIntensity,
-        timestamp: new Date()
-      });
-    } else {
-      performance.hoursTrained = parsedHoursTrained;
-      performance.sessionsPerWeek = parsedSessionsPerWeek;
-      performance.restDays = parsedRestDays;
-      performance.intensity = parsedIntensity;
-      performance.timestamp = new Date();
-    }
-
+    // Create a new performance record instead of updating
     const input = [
       parsedHoursTrained,
       parsedSessionsPerWeek,
@@ -572,14 +601,24 @@ router.put('/performance/update/:athleteId', async (req, res) => {
       parsedRestDays,
       parseFloat(athlete.age || 0)
     ];
-    performance.riskFlag = predictRiskFlag(input);
+    const riskFlag = predictRiskFlag(input);
     const { value: exertionLevel, category: exertionCategory } = calculateExertionLevel(
       parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
     );
-    performance.exertionLevel = exertionLevel;
-    performance.exertionCategory = exertionCategory;
-    await performance.save();
-    console.log(`Updated/Created Performance (by athleteId):`, performance.toObject());
+
+    const newPerformance = new AthleteData({ 
+      athleteId: athlete._id, 
+      hoursTrined: parsedHoursTrained, 
+      sessionsPerWeek: parsedSessionsPerWeek, 
+      restDays: parsedRestDays, 
+      intensity: parsedIntensity,
+      riskFlag,
+      exertionLevel,
+      exertionCategory,
+      timestamp: new Date() 
+    });
+    await newPerformance.save();
+    console.log(`Logged New Performance (by athleteId):`, newPerformance.toObject());
 
     const lastInjuryDate = athlete.injuryHistory.length > 0
       ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
@@ -598,20 +637,20 @@ router.put('/performance/update/:athleteId', async (req, res) => {
     const fatigueIndex = Math.min(100, Math.max(0, (parsedHoursTrained * 0.5) + (parsedSessionsPerWeek * 5) - (parsedRestDays * 10)));
 
     res.status(200).json({
-      message: 'Performance updated successfully',
+      message: 'Performance logged successfully',
       performance: { 
         athleteId: athlete._id, 
         hoursTrained: parsedHoursTrained, 
         sessionsPerWeek: parsedSessionsPerWeek, 
         restDays: parsedRestDays, 
         pastInjuries: athlete.injuryHistory.length, 
-        riskFlag: performance.riskFlag,
+        riskFlag,
         exertionLevel,
         exertionCategory,
-        timestamp: performance.timestamp 
+        timestamp: newPerformance.timestamp 
       },
       analysis: { 
-        riskFlag: performance.riskFlag, 
+        riskFlag, 
         injuryRisk: riskLevel, 
         injuryPredictionScore: injuryPrediction, 
         trendAnalysis: `Training load has ${trend}.`, 
@@ -623,14 +662,15 @@ router.put('/performance/update/:athleteId', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error updating performance (by athleteId):', error);
+    console.error('Error logging performance (by athleteId):', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 // POST /api/athlete/log-performance
+
 router.post('/log-performance', async (req, res) => {
   try {
-    const { athleteId, hoursTrained, sessionsPerWeek, restDays } = req.body;
+    const { athleteId, hoursTrained, sessionsPerWeek, restDays, rpe } = req.body;
     if (!athleteId || hoursTrained === undefined || sessionsPerWeek === undefined) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
@@ -638,7 +678,7 @@ router.post('/log-performance', async (req, res) => {
     const parsedHoursTrained = parseFloat(hoursTrained);
     const parsedSessionsPerWeek = parseFloat(sessionsPerWeek);
     const parsedRestDays = parseFloat(restDays || 0);
-    const parsedIntensity = 2 * parsedSessionsPerWeek;
+    const parsedIntensity = parseFloat(rpe) || (2 * parsedSessionsPerWeek);
 
     if (isNaN(parsedHoursTrained) || isNaN(parsedSessionsPerWeek) || 
         parsedHoursTrained < 0 || parsedSessionsPerWeek < 0) {
@@ -658,6 +698,13 @@ router.post('/log-performance', async (req, res) => {
       });
     }
 
+    // Calculate exertion level once and reuse it
+    const exertionResult = await calculateExertionLevel(
+      athleteId, parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
+    );
+    const exertionLevel = exertionResult.value;
+    const exertionCategory = exertionResult.category;
+
     const input = [
       parsedHoursTrained,
       parsedSessionsPerWeek,
@@ -666,9 +713,6 @@ router.post('/log-performance', async (req, res) => {
       parseFloat(athlete.age || 0)
     ];
     const riskFlag = predictRiskFlag(input);
-    const { value: exertionLevel, category: exertionCategory } = calculateExertionLevel(
-      parsedHoursTrained, parsedSessionsPerWeek, parsedRestDays, parsedIntensity, athlete.sport
-    );
 
     const athletePerformance = new AthleteData({ 
       athleteId: athlete._id, 
@@ -732,9 +776,144 @@ router.post('/log-performance', async (req, res) => {
     console.error('Error logging performance:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
 
-// PUT /api/athlete/:id/injuries
+});
+const calculateAthleteStatus = async (athleteId) => {
+  try {
+    const latestData = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
+    const athlete = await Athlete.findById(athleteId);
+    if (!athlete || !latestData) return 'UNKNOWN';
+
+    const { hoursTrained, sessionsPerWeek, restDays, intensity } = latestData;
+    const { trainingLoad, recoveryScore } = calculateTrainingMetrics(
+      hoursTrained,
+      sessionsPerWeek,
+      restDays,
+      intensity,
+      athlete.injuryHistory,
+      athlete.sport
+    );
+
+    const lastInjuryDate = athlete.injuryHistory.length > 0
+      ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
+      : 0;
+    const daysSinceLastInjury = lastInjuryDate ? (Date.now() - lastInjuryDate) / (1000 * 60 * 60 * 24) : 1000;
+
+    console.log('Athlete ID:', athleteId);
+    console.log('Training Load:', trainingLoad);
+    console.log('Recovery Score:', recoveryScore);
+    console.log('Days Since Last Injury:', daysSinceLastInjury);
+
+    // 1. Check for injured status first
+    if (daysSinceLastInjury < 30 || (athlete.injuryHistory.length > 0 && recoveryScore < 30)) {
+      return 'INJURED';
+    }
+    
+    // 2. Check for overtraining
+    if (trainingLoad > 100 && recoveryScore <= 50) {
+      return 'OVERTRAINING';
+    }
+    
+    // 3. Check for active status
+    if (trainingLoad > 200 && recoveryScore > 50) {
+      return 'ACTIVE';
+    }
+    
+    // 4. Check for resting status
+    if (recoveryScore > 70 && trainingLoad < 100) {
+      return 'RESTING';
+    }
+    
+    // 5. Default cases based on training load
+    if (trainingLoad > 150) {
+      return 'ACTIVE';
+    }
+    
+    if (trainingLoad < 50) {
+      return 'RESTING';
+    }
+    
+    // 6. If none of the above, return MODERATE
+    return 'MODERATE';
+    
+  } catch (error) {
+    console.error('Error calculating athlete status:', error);
+    return 'UNKNOWN';
+  }
+};
+router.get('/active-programs', async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentData = await AthleteData.find({ timestamp: { $gte: sevenDaysAgo } })
+      .populate('athleteId', 'sport injuryHistory');
+    
+    const activeAthletes = new Set();
+    for (const data of recentData) {
+      const athlete = data.athleteId;
+      if (!athlete) continue;
+
+      // Fetch latest status (to be calculated below)
+      const status = await calculateAthleteStatus(athlete._id);
+      if (status !== 'RESTING' && status !== 'INJURED') {
+        activeAthletes.add(athlete._id.toString());
+      }
+    }
+
+    res.status(200).json({ activePrograms: activeAthletes.size });
+  } catch (error) {
+    console.error('Error fetching active programs:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+router.post('/add-event', async (req, res) => {
+  try {
+    const { athleteId, title, date, time, description } = req.body;
+    if (!athleteId || !title || !date || !time) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const athlete = await Athlete.findById(athleteId);
+    if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
+    const event = new Event({
+      athleteId,
+      title,
+      date: new Date(date),
+      time,
+      description: description || '',
+    });
+    console.log('Saved event date:', event.date);
+    await event.save();
+
+    res.status(201).json({ message: 'Event added successfully', event });
+  } catch (error) {
+    console.error('Error adding event:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+router.get('/upcoming-schedule', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to start of day
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    console.log('Today:', today, 'Next Week:', nextWeek);
+    const events = await Event.find({
+      date: { $gte: today, $lte: nextWeek },
+    }).sort({ date: 1 });
+    console.log('Raw Events:', events);
+    const formattedEvents = events.map(event => ({
+      title: event.title,
+      date: event.date.toISOString().split('T')[0],
+      time: event.time,
+    }));
+    console.log('Formatted Events:', formattedEvents);
+    res.status(200).json({ upcomingEvents: formattedEvents });
+  } catch (error) {
+    console.error('Error fetching upcoming schedule:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+//PUT /api/athlete/:id/injuries
 router.put('/:id/injuries', async (req, res) => {
   try {
     const { injury, severity, recoveryTime, date } = req.body;
@@ -768,5 +947,245 @@ router.put('/:id/injuries', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+// POST /api/athlete/create-team
+router.post('/create-team', async (req, res) => {
+  try {
+    const { name, sport, athleteIds, coach } = req.body;
+    if (!name || !sport) return res.status(400).json({ message: 'Missing required fields' });
 
+    // Verify athletes exist
+    const athletes = await Athlete.find({ _id: { $in: athleteIds } });
+    if (athletes.length !== athleteIds.length) {
+      return res.status(400).json({ message: 'Some athletes not found' });
+    }
+
+    const team = new Team({ name, sport, athletes: athleteIds, coach });
+    await team.save();
+
+    res.status(201).json({ message: 'Team created successfully', team });
+  } catch (error) {
+    console.error('Error creating team:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+// PUT /api/athlete/team/:teamId/add-athlete
+router.put('/team/:teamId/add-athlete', async (req, res) => {
+  try {
+    const { athleteId } = req.body;
+    const team = await Team.findById(req.params.teamId);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    const athlete = await Athlete.findById(athleteId);
+    if (!athlete) return res.status(404).json({ message: 'Athlete not found' });
+
+    if (!team.athletes.includes(athleteId)) {
+      team.athletes.push(athleteId);
+      await team.save();
+    }
+
+    res.status(200).json({ message: 'Athlete added to team', team });
+  } catch (error) {
+    console.error('Error adding athlete to team:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+// GET /api/athlete/teams
+router.get('/teams', async (req, res) => {
+  try {
+    const teams = await Team.find().populate('athletes', 'name sport');
+    res.status(200).json(teams);
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+router.get('/team-performance/:teamId', async (req, res) => {
+  try {
+    const teamId = req.params.teamId;
+    const team = await Team.findById(teamId).populate('athletes');
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+
+    const athleteIds = team.athletes.map(athlete => athlete._id);
+    if (!athleteIds.length) return res.status(200).json({ message: 'No athletes in team', metrics: {} });
+
+    // Fetch recent AthleteData (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const athleteData = await AthleteData.find({
+      athleteId: { $in: athleteIds },
+      timestamp: { $gte: thirtyDaysAgo },
+    })
+      .populate('athleteId', 'name injuryHistory sport age')
+      .sort({ timestamp: -1 });
+
+    if (!athleteData.length) {
+      return res.status(200).json({ message: 'No recent data for team athletes', metrics: {}, historicalMetrics: [] });
+    }
+
+    // Aggregate current metrics
+    const metrics = {
+      totalAthletes: athleteIds.length,
+      activeAthletes: 0,
+      averageTrainingLoad: 0,
+      averageRecoveryScore: 0,
+      teamFatigueIndex: 0,
+      exertionDistribution: { High: 0, Moderate: 0, Low: 0 },
+      injuryRiskDistribution: { High: 0, Moderate: 0, Low: 0 },
+      recentInjuries: 0,
+      highRiskAthletes: [],
+    };
+
+    const uniqueAthletes = new Set();
+    let totalTrainingLoad = 0;
+    let totalRecoveryScore = 0;
+    let totalFatigue = 0;
+
+    athleteData.forEach(data => {
+      const athlete = data.athleteId;
+      if (!athlete) return;
+
+      uniqueAthletes.add(athlete._id.toString());
+      const trainingLoad = data.hoursTrained * data.intensity;
+      totalTrainingLoad += trainingLoad;
+      const recoveryScore = Math.max(0, Math.min(100, (data.restDays * 15) - (data.sessionsPerWeek * 10)));
+      totalRecoveryScore += recoveryScore;
+
+      if (data.exertionCategory) {
+        metrics.exertionDistribution[data.exertionCategory]++;
+      }
+
+      const lastInjuryDate = athlete.injuryHistory.length > 0
+        ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
+        : 0;
+      const daysSinceLastInjury = lastInjuryDate
+        ? (Date.now() - lastInjuryDate) / (1000 * 60 * 60 * 24)
+        : 1000;
+
+      const input = [
+        data.hoursTrained,
+        data.sessionsPerWeek,
+        athlete.injuryHistory.length,
+        data.restDays,
+        athlete.age || 0,
+        daysSinceLastInjury,
+      ];
+      const normalizedInput = normalizeInput(input);
+      const tensor = tf.tensor2d([normalizedInput], [1, 6], 'float32');
+      const injuryRisk = injuryModel.predict(tensor).dataSync()[0];
+
+      const riskCategory = injuryRisk > 0.75 ? 'High' : injuryRisk > 0.25 ? 'Moderate' : 'Low';
+      metrics.injuryRiskDistribution[riskCategory]++;
+      if (riskCategory === 'High') {
+        metrics.highRiskAthletes.push({ name: athlete.name, sport: athlete.sport });
+      }
+
+      const recentInjuries = athlete.injuryHistory.filter(
+        i => (Date.now() - new Date(i.date).getTime()) / (1000 * 60 * 60 * 24) < 30
+      ).length;
+      metrics.recentInjuries += recentInjuries;
+
+      const fatigueIndex = Math.min(
+        100,
+        Math.max(0, (data.hoursTrained * 0.5) + (data.sessionsPerWeek * 5) - (data.restDays * 10))
+      );
+      totalFatigue += fatigueIndex;
+    });
+
+    metrics.activeAthletes = uniqueAthletes.size;
+    metrics.averageTrainingLoad =
+      metrics.activeAthletes > 0 ? (totalTrainingLoad / metrics.activeAthletes).toFixed(1) : 0;
+    metrics.averageRecoveryScore =
+      metrics.activeAthletes > 0 ? (totalRecoveryScore / metrics.activeAthletes).toFixed(1) : 0;
+    metrics.teamFatigueIndex =
+      metrics.activeAthletes > 0 ? (totalFatigue / metrics.activeAthletes).toFixed(1) : 0;
+
+    Object.keys(metrics.exertionDistribution).forEach(key => {
+      metrics.exertionDistribution[key] = metrics.activeAthletes
+        ? ((metrics.exertionDistribution[key] / metrics.activeAthletes) * 100).toFixed(1) + '%'
+        : '0%';
+    });
+    Object.keys(metrics.injuryRiskDistribution).forEach(key => {
+      metrics.injuryRiskDistribution[key] = metrics.activeAthletes
+        ? ((metrics.injuryRiskDistribution[key] / metrics.activeAthletes) * 100).toFixed(1) + '%'
+        : '0%';
+    });
+
+    // Calculate historical metrics (group by date)
+    const historicalMetrics = [];
+    const dataByDate = {};
+
+    athleteData.forEach(data => {
+      const date = new Date(data.timestamp).toISOString().split('T')[0];
+      if (!dataByDate[date]) {
+        dataByDate[date] = { trainingLoad: 0, recoveryScore: 0, fatigueIndex: 0, count: 0 };
+      }
+      dataByDate[date].trainingLoad += data.hoursTrained * data.intensity;
+      dataByDate[date].recoveryScore += Math.max(0, Math.min(100, (data.restDays * 15) - (data.sessionsPerWeek * 10)));
+      dataByDate[date].fatigueIndex += Math.min(
+        100,
+        Math.max(0, (data.hoursTrained * 0.5) + (data.sessionsPerWeek * 5) - (data.restDays * 10))
+      );
+      dataByDate[date].count += 1;
+    });
+
+    Object.keys(dataByDate)
+      .sort()
+      .forEach(date => {
+        const entry = dataByDate[date];
+        historicalMetrics.push({
+          date,
+          averageTrainingLoad: (entry.trainingLoad / entry.count).toFixed(1),
+          averageRecoveryScore: (entry.recoveryScore / entry.count).toFixed(1),
+          teamFatigueIndex: (entry.fatigueIndex / entry.count).toFixed(1),
+        });
+      });
+
+    const insights = {
+      trainingLoad: `Team training load averages ${metrics.averageTrainingLoad}, which is ${
+        metrics.averageTrainingLoad > 300 ? 'high' : 'manageable'
+      }.`,
+      recovery: `Team recovery score is ${metrics.averageRecoveryScore}, indicating ${
+        metrics.averageRecoveryScore < 30
+          ? 'poor recovery'
+          : metrics.averageRecoveryScore < 50
+          ? 'moderate recovery'
+          : 'good recovery'
+      }.`,
+      injuryRisk: `Recent injuries: ${metrics.recentInjuries}. High-risk athletes: ${metrics.highRiskAthletes.length}.`,
+      recommendations: [],
+    };
+
+    if (metrics.averageTrainingLoad > 300) {
+      insights.recommendations.push(
+        'Reduce team training volume by 15-20% to prevent overtraining. Consider lighter sessions or cross-training.'
+      );
+    }
+    if (metrics.averageRecoveryScore < 50) {
+      insights.recommendations.push(
+        'Increase team rest days to 2-3 per week and incorporate recovery sessions (e.g., yoga, stretching).'
+      );
+    }
+    if (metrics.recentInjuries > metrics.activeAthletes * 0.2) {
+      insights.recommendations.push(
+        'Review training protocols for injury prevention. Schedule medical evaluations for affected athletes.'
+      );
+    }
+    if (metrics.highRiskAthletes.length > 0) {
+      insights.recommendations.push(
+        `Monitor high-risk athletes: ${metrics.highRiskAthletes.map(a => a.name).join(', ')}.`
+      );
+    }
+
+    res.status(200).json({
+      teamId: team._id,
+      teamName: team.name,
+      sport: team.sport,
+      metrics,
+      insights,
+      historicalMetrics, // Added historical data
+    });
+  } catch (error) {
+    console.error('Error fetching team performance:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 export default router;

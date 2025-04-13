@@ -69,6 +69,18 @@ function PerformanceUpdateForm() {
             className="mt-1 p-2 w-full bg-gray-700 rounded text-white"
           />
         </div>
+        <div className="mb-4">
+  <label className="block text-sm font-medium">Rate of Perceived Exertion (1-10)</label>
+  <input
+    type="number"
+    name="rpe"
+    value={formData.rpe || ''}
+    onChange={handleChange}
+    min="1"
+    max="10"
+    className="mt-1 p-2 w-full bg-gray-700 rounded text-white"
+  />
+</div>
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
           Update Performance
         </button>
