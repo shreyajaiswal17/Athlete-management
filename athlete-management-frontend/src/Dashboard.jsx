@@ -252,6 +252,7 @@ const Dashboard = () => {
                           <p className="text-sm text-blue-300">{athlete.sport}</p>
                         </div>
                       </div>
+                      
                       <p
                         className={`font-semibold ${
                           athlete.status === 'PEAKING'
@@ -271,6 +272,7 @@ const Dashboard = () => {
                   <p className="text-blue-300">No athletes in selected team</p>
                 )}
               </div>
+          
             </div>
           </motion.div>
 
@@ -296,6 +298,15 @@ const Dashboard = () => {
             </motion.div>
           )}
         </div>
+        <div className="mt-12 flex justify-center">
+  <button
+    onClick={() => navigate('/performanceupdate/:athleteId')}
+    className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-8 py-4 rounded-3xl shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1"
+  >
+    🚀 Update Athlete Performance!
+  </button>
+</div>
+
       </main>
 
       {/* Footer */}
