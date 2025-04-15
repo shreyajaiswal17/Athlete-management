@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Line } from 'react-chartjs-2';
+import './CreateAthlete';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,11 +13,13 @@ import {
   Legend,
 } from 'chart.js';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [athleteData, setAthleteData] = useState([]);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -24,6 +27,7 @@ const Dashboard = () => {
   const { logout, user } = useAuth0();
 
   const fetchData = async () => {
+    
     try {
       const athleteResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/data`);
       if (!athleteResponse.ok) throw new Error('Failed to fetch athlete data');
@@ -152,6 +156,8 @@ const Dashboard = () => {
           >
             Logout
           </button>
+          {/* <Link to="/create-athlete"><motion.button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-transform transform hover:scale-105 shadow-md" whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}>Create New Athlete 🚀</motion.button></Link> */}
+          
         </div>
       </header>
 
@@ -181,6 +187,12 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
+          <button
+        onClick={() => navigate('/create-athlete')}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold mx-10 px-5 py-2 rounded-2xl shadow transition duration-200"
+      >
+        + Create New Athlete
+      </button>
         </motion.div>
 
         {/* Athlete Status and Team Performance */}
@@ -214,6 +226,7 @@ const Dashboard = () => {
                           <p className="font-semibold text-white">{athlete.athleteName}</p>
                           <p className="text-sm text-blue-300">{athlete.sport}</p>
                         </div>
+                        
                       </div>
                       <p
                         className={`font-semibold ${
@@ -229,6 +242,7 @@ const Dashboard = () => {
                         {athlete.status}
                       </p>
                     </motion.div>
+                    
                   ))
                 ) : (
                   <p className="text-blue-300">No athletes in selected team</p>
