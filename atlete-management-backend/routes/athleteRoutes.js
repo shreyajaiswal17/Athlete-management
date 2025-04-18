@@ -204,13 +204,13 @@ const generatePreventionRecommendation = (prediction, input, sport = 'General') 
 // Helper function to calculate training load, recovery metrics, and provide sport-specific recommendations
 const calculateTrainingMetrics = (hoursTrained, sessionsPerWeek, restDays, intensity, injuryHistory = [], sport = 'General') => {
   const trainingLoad = hoursTrained * intensity;
-  const recoveryScore = Math.max(0, Math.min(100, (restDays * 15) - (sessionsPerWeek * 10)));
+  const recoveryScore = Math.max(0, Math.min(100, (restDays * 20) + (7 - sessionsPerWeek) * 5));
   const riskFlag = trainingLoad > 300 || recoveryScore < 30 ? 'High Risk' : recoveryScore < 50 ? 'Moderate Risk' : 'Low Risk';
 
   const recommendations = [];
   if (trainingLoad > 300) {
     recommendations.push({
-      recommendation: 'Reducers training load by 20-30% to avoid overtraining and fatigue.',
+      recommendation: 'Reduce training load by 20-30% to avoid overtraining and fatigue.',
       explanation: 'Overtraining increases the risk of stress fractures, muscle strains, and burnout.'
     });
   }
@@ -228,7 +228,6 @@ const calculateTrainingMetrics = (hoursTrained, sessionsPerWeek, restDays, inten
   }
   return { trainingLoad, recoveryScore, riskFlag, recommendations };
 };
-
 // GET /api/athlete/training-metrics/:id
 router.get('/training-metrics/:id', async (req, res) => {
   try {
@@ -443,8 +442,17 @@ router.get('/data', async (req, res) => {
     const enrichedData = await Athlete.aggregate([
       { $lookup: { from: 'athletedatas', localField: '_id', foreignField: 'athleteId', as: 'athleteData' } },
       { $unwind: { path: '$athleteData', preserveNullAndEmptyArrays: true } },
-      { $sort: { 'athleteData.timestamp': -1, createdAt: -1 } },
-      { $limit: 10 },
+      { $sort: { 'athleteData.timestamp': -1 } },
+      {
+        $group: {
+          _id: '$_id',
+          athleteData: { $first: '$athleteData' },
+          name: { $first: '$name' },
+          sport: { $first: '$sport' },
+          age: { $first: '$age' },
+          injuryHistory: { $first: '$injuryHistory' }
+        }
+      },
       {
         $project: {
           athleteId: '$_id',
@@ -460,19 +468,6 @@ router.get('/data', async (req, res) => {
         }
       }
     ]);
-
-    if (!enrichedData.length) return res.status(404).json({ message: 'No athletes found' });
-
-    // Compute status for each athlete
-    const enrichedDataWithStatus = await Promise.all(
-      enrichedData.map(async (athlete) => {
-        const status = await calculateAthleteStatus(athlete.athleteId);
-        console.log(`Athlete ID: ${athlete.athleteId}, Name: ${athlete.athleteName}, Status: ${status}`); // Log athlete status
-        return { ...athlete, status };
-      })
-    );
-
-    res.status(200).json(enrichedDataWithStatus);
   } catch (error) {
     console.error('Error fetching athlete data:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -778,93 +773,138 @@ router.post('/log-performance', async (req, res) => {
   }
 
 });
+
+const sportThresholds = {
+  Cricket: { maxTrainingLoad: 200, minRecovery: 70, maxHours: 25, maxSessions: 6 },
+  Running: { maxTrainingLoad: 120, minRecovery: 80, maxHours: 15, maxSessions: 5 },
+  Swimming: { maxTrainingLoad: 160, minRecovery: 75, maxHours: 20, maxSessions: 7 },
+};
+
+const normalize = (value, max) => Math.min(Math.max(value / max, 0), 1);
+
+const calculateTrainingMetric = (hoursTrained, sessionsPerWeek, restDays, intensity, injuryHistory, sport) => {
+  const thresholds = sportThresholds[sport] || sportThresholds.Cricket;
+  const injuryPenalty = injuryHistory.reduce((sum, injury) => sum + (injury.severity || 1), 0) / 10;
+  
+  const rawLoad = (hoursTrained || 0) * (sessionsPerWeek || 0) * (intensity || 5);
+  const trainingLoad = rawLoad / Math.max((restDays || 0) + 2, 2) * (1 - injuryPenalty);
+  
+  const recoveryBase = (restDays || 0) * 15 + (injuryHistory.length > 0 ? 20 : 40);
+  const recoveryScore = Math.min(100, Math.max(0, recoveryBase - injuryPenalty * 10));
+  
+  return { trainingLoad: Math.round(trainingLoad), recoveryScore: Math.round(recoveryScore) };
+};
+
 const calculateAthleteStatus = async (athleteId) => {
   try {
+    console.log(`Calculating status for athleteId: ${athleteId}`);
+    
     const latestData = await AthleteData.findOne({ athleteId }).sort({ timestamp: -1 });
     const athlete = await Athlete.findById(athleteId);
-    if (!athlete || !latestData) return 'UNKNOWN';
+    
+    if (!athlete) {
+      console.log(`No Athlete found for athleteId: ${athleteId}`);
+      return 'UNKNOWN';
+    }
+    if (!latestData) {
+      console.log(`No AthleteData found for athleteId: ${athleteId}`);
+      return 'UNKNOWN';
+    }
 
-    const { hoursTrained, sessionsPerWeek, restDays, intensity } = latestData;
-    const { trainingLoad, recoveryScore } = calculateTrainingMetrics(
+    console.log(`AthleteData found:`, {
+      athleteId: latestData.athleteId.toString(),
+      hoursTrained: latestData.hoursTrained,
+      sessionsPerWeek: latestData.sessionsPerWeek,
+      restDays: latestData.restDays,
+      intensity: latestData.intensity,
+      riskFlag: latestData.riskFlag,
+      timestamp: latestData.timestamp,
+    });
+
+    // Relaxed to 10 days for testing
+    const daysSinceData = (Date.now() - new Date(latestData.timestamp).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceData > 10) {
+      console.log(`Data too old: ${daysSinceData} days since last update`);
+      return 'UNKNOWN';
+    }
+    if (latestData.hoursTrained == null || latestData.sessionsPerWeek == null || latestData.restDays == null) {
+      console.log(`Missing required fields:`, {
+        hoursTrained: latestData.hoursTrained,
+        sessionsPerWeek: latestData.sessionsPerWeek,
+        restDays: latestData.restDays,
+      });
+      return 'UNKNOWN';
+    }
+
+    const { hoursTrained, sessionsPerWeek, restDays, intensity, riskFlag } = latestData;
+    const { injuryHistory, sport, age } = athlete;
+    const { trainingLoad, recoveryScore } = calculateTrainingMetric(
       hoursTrained,
       sessionsPerWeek,
       restDays,
       intensity,
-      athlete.injuryHistory,
-      athlete.sport
+      injuryHistory,
+      sport
     );
 
-    const lastInjuryDate = athlete.injuryHistory.length > 0
-      ? Math.max(...athlete.injuryHistory.map(i => new Date(i.date).getTime()))
-      : 0;
-    const daysSinceLastInjury = lastInjuryDate ? (Date.now() - lastInjuryDate) / (1000 * 60 * 60 * 24) : 1000;
+    console.log('Calculated Metrics:', {
+      trainingLoad,
+      recoveryScore,
+      sport,
+      age,
+      injuryHistoryLength: injuryHistory.length,
+      riskFlag,
+    });
 
-    console.log('Athlete ID:', athleteId);
-    console.log('Training Load:', trainingLoad);
-    console.log('Recovery Score:', recoveryScore);
-    console.log('Days Since Last Injury:', daysSinceLastInjury);
-
-    // 1. Check for injured status first
-    if (daysSinceLastInjury < 30 || (athlete.injuryHistory.length > 0 && recoveryScore < 30)) {
+    const thresholds = sportThresholds[sport] || sportThresholds.Cricket;
+    
+    if (injuryHistory.some(injury => (Date.now() - new Date(injury.date).getTime()) / (1000 * 60 * 60 * 24) < (injury.recoveryTime || 30))) {
+      console.log('Status: INJURED');
       return 'INJURED';
     }
-    
-    // 2. Check for overtraining
-    if (trainingLoad > 100 && recoveryScore <= 50) {
+
+    const riskFlagScore = { 'Low Risk': 0.9, 'Moderate Risk': 0.5, 'High Risk': 0.1 }[riskFlag] || 0.5;
+    const normalizedLoad = normalize(trainingLoad, thresholds.maxTrainingLoad);
+    const normalizedRecovery = normalize(recoveryScore, 100);
+    const injuryFactor = 1 - Math.min(injuryHistory.length / 5, 1);
+    const ageAdjustment = age > 40 ? 0.9 : age < 25 ? 1.05 : 1.0;
+
+    const statusScore = (
+      0.4 * riskFlagScore +
+      0.3 * normalizedLoad +
+      0.2 * normalizedRecovery +
+      0.1 * injuryFactor
+    ) * ageAdjustment;
+
+    console.log('Status Score:', statusScore);
+
+    if (statusScore < 0.3 || trainingLoad > thresholds.maxTrainingLoad || restDays < 1) {
+      console.log('Status: OVERTRAINING');
       return 'OVERTRAINING';
     }
-    
-    // 3. Check for active status
-    if (trainingLoad > 200 && recoveryScore > 50) {
-      return 'ACTIVE';
+    if (statusScore > 0.85 && trainingLoad > 0.7 * thresholds.maxTrainingLoad && recoveryScore > thresholds.minRecovery) {
+      console.log('Status: PEAKING');
+      return 'PEAKING';
     }
-    
-    // 4. Check for resting status
-    if (recoveryScore > 70 && trainingLoad < 100) {
+    if (restDays > 3 && trainingLoad < 0.3 * thresholds.maxTrainingLoad) {
+      console.log('Status: RESTING');
       return 'RESTING';
     }
-    
-    // 5. Default cases based on training load
-    if (trainingLoad > 150) {
+    if (statusScore > 0.6) {
+      console.log('Status: ACTIVE');
       return 'ACTIVE';
     }
-    
-    if (trainingLoad < 50) {
-      return 'RESTING';
+    if (statusScore > 0.4) {
+      console.log('Status: MODERATE');
+      return 'MODERATE';
     }
-    
-    // 6. If none of the above, return MODERATE
-    return 'MODERATE';
-    
+    console.log('Status: UNKNOWN (fallback)');
+    return 'UNKNOWN';
   } catch (error) {
-    console.error('Error calculating athlete status:', error);
+    console.error(`Error calculating athlete status for ${athleteId}:`, error);
     return 'UNKNOWN';
   }
 };
-router.get('/active-programs', async (req, res) => {
-  try {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const recentData = await AthleteData.find({ timestamp: { $gte: sevenDaysAgo } })
-      .populate('athleteId', 'sport injuryHistory');
-    
-    const activeAthletes = new Set();
-    for (const data of recentData) {
-      const athlete = data.athleteId;
-      if (!athlete) continue;
-
-      // Fetch latest status (to be calculated below)
-      const status = await calculateAthleteStatus(athlete._id);
-      if (status !== 'RESTING' && status !== 'INJURED') {
-        activeAthletes.add(athlete._id.toString());
-      }
-    }
-
-    res.status(200).json({ activePrograms: activeAthletes.size });
-  } catch (error) {
-    console.error('Error fetching active programs:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
 router.post('/add-event', async (req, res) => {
   try {
     const { athleteId, title, date, time, description } = req.body;
@@ -1032,6 +1072,15 @@ router.get('/team-performance/:teamId', async (req, res) => {
       injuryRiskDistribution: { High: 0, Moderate: 0, Low: 0 },
       recentInjuries: 0,
       highRiskAthletes: [],
+      statusDistribution: {
+        INJURED: 0,
+        OVERTRAINING: 0,
+        ACTIVE: 0,
+        RESTING: 0,
+        PEAKING: 0,
+        MODERATE: 0,
+        UNKNOWN: 0,
+      },
     };
 
     const uniqueAthletes = new Set();
@@ -1039,6 +1088,32 @@ router.get('/team-performance/:teamId', async (req, res) => {
     let totalRecoveryScore = 0;
     let totalFatigue = 0;
 
+    // Calculate athlete statuses and store per-athlete data
+    const athleteStatuses = [];
+
+    // Group athlete data by athlete ID to get the latest record for each
+    const latestAthleteData = {};
+    athleteData.forEach(data => {
+      const athleteId = data.athleteId._id.toString();
+      if (!latestAthleteData[athleteId] || new Date(data.timestamp) > new Date(latestAthleteData[athleteId].timestamp)) {
+        latestAthleteData[athleteId] = data;
+      }
+    });
+
+    // Calculate status for each athlete
+    for (const athlete of team.athletes) {
+      const athleteId = athlete._id.toString();
+      const status = await calculateAthleteStatus(athleteId);
+      athleteStatuses.push({
+        athleteId: athlete._id,
+        name: athlete.name,
+        sport: athlete.sport,
+        status,
+      });
+      metrics.statusDistribution[status]++;
+    }
+
+    // Process athlete data for metrics
     athleteData.forEach(data => {
       const athlete = data.athleteId;
       if (!athlete) return;
@@ -1098,6 +1173,7 @@ router.get('/team-performance/:teamId', async (req, res) => {
     metrics.teamFatigueIndex =
       metrics.activeAthletes > 0 ? (totalFatigue / metrics.activeAthletes).toFixed(1) : 0;
 
+    // Convert distribution counts to percentages
     Object.keys(metrics.exertionDistribution).forEach(key => {
       metrics.exertionDistribution[key] = metrics.activeAthletes
         ? ((metrics.exertionDistribution[key] / metrics.activeAthletes) * 100).toFixed(1) + '%'
@@ -1106,6 +1182,11 @@ router.get('/team-performance/:teamId', async (req, res) => {
     Object.keys(metrics.injuryRiskDistribution).forEach(key => {
       metrics.injuryRiskDistribution[key] = metrics.activeAthletes
         ? ((metrics.injuryRiskDistribution[key] / metrics.activeAthletes) * 100).toFixed(1) + '%'
+        : '0%';
+    });
+    Object.keys(metrics.statusDistribution).forEach(key => {
+      metrics.statusDistribution[key] = metrics.activeAthletes
+        ? ((metrics.statusDistribution[key] / metrics.activeAthletes) * 100).toFixed(1) + '%'
         : '0%';
     });
 
@@ -1151,6 +1232,7 @@ router.get('/team-performance/:teamId', async (req, res) => {
           : 'good recovery'
       }.`,
       injuryRisk: `Recent injuries: ${metrics.recentInjuries}. High-risk athletes: ${metrics.highRiskAthletes.length}.`,
+      statusSummary: `Athlete statuses: ${metrics.statusDistribution.PEAKING} peaking, ${metrics.statusDistribution.INJURED} injured, ${metrics.statusDistribution.OVERTRAINING} overtraining.`,
       recommendations: [],
     };
 
@@ -1174,6 +1256,16 @@ router.get('/team-performance/:teamId', async (req, res) => {
         `Monitor high-risk athletes: ${metrics.highRiskAthletes.map(a => a.name).join(', ')}.`
       );
     }
+    if (metrics.statusDistribution.INJURED > '0%') {
+      insights.recommendations.push(
+        `Prioritize recovery plans for ${metrics.statusDistribution.INJURED} of athletes currently injured.`
+      );
+    }
+    if (metrics.statusDistribution.OVERTRAINING > '0%') {
+      insights.recommendations.push(
+        `Reduce training intensity for ${metrics.statusDistribution.OVERTRAINING} of athletes at risk of overtraining.`
+      );
+    }
 
     res.status(200).json({
       teamId: team._id,
@@ -1181,7 +1273,8 @@ router.get('/team-performance/:teamId', async (req, res) => {
       sport: team.sport,
       metrics,
       insights,
-      historicalMetrics, // Added historical data
+      historicalMetrics,
+      athleteStatuses, // New field with per-athlete status
     });
   } catch (error) {
     console.error('Error fetching team performance:', error);

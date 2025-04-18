@@ -1,5 +1,7 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -21,34 +23,49 @@ const Dashboard = () => {
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [teamPerformance, setTeamPerformance] = useState(null);
+  const [teamForm, setTeamForm] = useState({ name: '', sport: '', athleteIds: [], coach: '' });
+  const [addAthleteForm, setAddAthleteForm] = useState({ athleteId: '' });
+  const [showCreateTeamForm, setShowCreateTeamForm] = useState(false);
+  const [showAddAthleteForm, setShowAddAthleteForm] = useState(false);
   const { logout, user } = useAuth0();
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
-      const athleteResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/data`);
-      if (!athleteResponse.ok) throw new Error('Failed to fetch athlete data');
-      const athletes = await athleteResponse.json();
-      setAthleteData(athletes);
+      console.log('API URL:', import.meta.env.VITE_API_URL);
 
       const teamsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/teams`);
       if (!teamsResponse.ok) throw new Error('Failed to fetch teams');
       const teamsData = await teamsResponse.json();
+      console.log('Teams Response:', teamsData);
       setTeams(teamsData);
       if (teamsData.length > 0 && !selectedTeamId) {
         setSelectedTeamId(teamsData[0]._id);
       }
 
       if (selectedTeamId) {
-        const performanceResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`);
+        const performanceResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
+        );
         if (!performanceResponse.ok) throw new Error('Failed to fetch team performance');
         const performanceData = await performanceResponse.json();
+        console.log('Performance:', performanceData);
         setTeamPerformance(performanceData);
+
+        // Populate athleteData with athleteStatuses
+        const athleteStatusData = performanceData.athleteStatuses?.map(status => ({
+          athleteId: status.athleteId,
+          athleteName: status.name,
+          sport: status.sport,
+          status: status.status,
+        })) || [];
+        setAthleteData(athleteStatusData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
       setAthleteData([
         { athleteId: '1', athleteName: 'Aditya Singh', sport: 'Sprint', status: 'PEAKING' },
-        { athleteId: '2', athleteName: 'Rahul Patel', sport: 'Middle Distance', status: 'IMPROVING' },
+        { athleteId: '2', athleteName: 'Rahul Patel', sport: 'Middle Distance', status: 'MODERATE' },
       ]);
       setTeams([{ _id: '1', name: 'Sprint Team', sport: 'Sprint', athletes: [{ _id: '1' }, { _id: '2' }] }]);
       setSelectedTeamId('1');
@@ -70,6 +87,65 @@ const Dashboard = () => {
     }
   };
 
+  const fetchAllAthletes = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/data`);
+      if (!response.ok) throw new Error('Failed to fetch all athletes');
+      const data = await response.json();
+      setAthleteData(data);
+    } catch (error) {
+      console.error('Error fetching all athletes:', error);
+    }
+  };
+
+  // Create Team Handler
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/create-team`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(teamForm),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      setTeams([...teams, result.team]);
+      setTeamForm({ name: '', sport: '', athleteIds: [], coach: '' });
+      setShowCreateTeamForm(false);
+      alert('Team created successfully');
+      fetchData(); // Refresh data to include new team
+    } catch (error) {
+      console.error('Error creating team:', error);
+      alert(`Failed to create team: ${error.message}`);
+    }
+  };
+
+  // Add Athlete to Team Handler
+  const handleAddAthlete = async (e) => {
+    e.preventDefault();
+    if (!selectedTeamId) return alert('Please select a team');
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/athlete/team/${selectedTeamId}/add-athlete`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(addAthleteForm),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message);
+      setTeams(teams.map((t) => (t._id === selectedTeamId ? result.team : t)));
+      setAddAthleteForm({ athleteId: '' });
+      setShowAddAthleteForm(false);
+      alert('Athlete added successfully');
+      fetchData(); // Refresh data to update athlete statuses
+    } catch (error) {
+      console.error('Error adding athlete:', error);
+      alert(`Failed to add athlete: ${error.message}`);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [selectedTeamId]);
@@ -78,12 +154,15 @@ const Dashboard = () => {
     setSelectedTeamId(e.target.value);
   };
 
-  // Filter athletes by selected team
-  const selectedTeam = teams.find(team => team._id === selectedTeamId);
-  const teamAthleteIds = selectedTeam?.athletes.map(a => a._id.toString()) || [];
-  const filteredAthleteData = selectedTeamId
-    ? athleteData.filter(athlete => teamAthleteIds.includes(athlete.athleteId.toString()))
-    : athleteData;
+  // Use athleteStatuses from teamPerformance for selected team
+  const selectedTeam = teams.find((team) => team._id === selectedTeamId);
+  console.log('Selected Team:', selectedTeam);
+  const selectedTeamAthletes = selectedTeam && teamPerformance?.athleteStatuses
+    ? teamPerformance.athleteStatuses.filter((athlete) =>
+        selectedTeam.athletes.some((teamAthlete) => teamAthlete._id === athlete.athleteId)
+      )
+    : [];
+  console.log('selectedTeamAthletes', selectedTeamAthletes);
 
   const teamPerformanceChartData = teamPerformance?.historicalMetrics
     ? {
@@ -136,6 +215,11 @@ const Dashboard = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
+  // Navigate to AthleteDetail
+  const handleAthleteClick = (athleteId) => {
+    navigate(`/athlete/${athleteId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000] text-white font-sans">
       {/* Header */}
@@ -157,7 +241,145 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="p-6 max-w-6xl mx-auto">
-        <div className="text-right text-blue-300 mb-6">April 10, 2025</div>
+        <div className="text-right text-blue-300 mb-6">April 18, 2025</div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 flex gap-4"
+        >
+          <button
+            onClick={() => setShowCreateTeamForm(!showCreateTeamForm)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold transition-colors"
+          >
+            {showCreateTeamForm ? 'Hide Create Team' : 'Create Team'}
+          </button>
+          <button
+            onClick={() => setShowAddAthleteForm(!showAddAthleteForm)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold transition-colors"
+          >
+            {showAddAthleteForm ? 'Hide Add Athlete' : 'Add Athlete to Team'}
+          </button>
+        </motion.div>
+
+        {/* Create Team Form */}
+        {showCreateTeamForm && (
+          <motion.div
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-8"
+          >
+            <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
+              <h3 className="text-xl font-semibold text-white mb-4">Create New Team</h3>
+              <form onSubmit={handleCreateTeam} className="space-y-4">
+                <div>
+                  <label className="block text-blue-200">Team Name</label>
+                  <input
+                    type="text"
+                    value={teamForm.name}
+                    onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                    className="w-full p-2 rounded-lg bg-gray-800/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-200">Sport</label>
+                  <input
+                    type="text"
+                    value={teamForm.sport}
+                    onChange={(e) => setTeamForm({ ...teamForm, sport: e.target.value })}
+                    className="w-full p-2 rounded-lg bg-gray-800/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-200">Athlete IDs (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={teamForm.athleteIds.join(',')}
+                    onChange={(e) =>
+                      setTeamForm({ ...teamForm, athleteIds: e.target.value.split(',').map((id) => id.trim()) })
+                    }
+                    className="w-full p-2 rounded-lg bg-gray-800/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    placeholder="e.g., id1,id2,id3"
+                  />
+                </div>
+                <div>
+                  <label className="block text-blue-200">Coach</label>
+                  <input
+                    type="text"
+                    value={teamForm.coach}
+                    onChange={(e) => setTeamForm({ ...teamForm, coach: e.target.value })}
+                    className="w-full p-2 rounded-lg bg-gray-800/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const athleteId = prompt('Enter Athlete ID to add:');
+                    if (athleteId) {
+                      setTeamForm((prev) => ({
+                        ...prev,
+                        athleteIds: [...prev.athleteIds, athleteId.trim()],
+                      }));
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white font-semibold transition-colors"
+                >
+                  Add Athlete to Team
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold transition-colors"
+                >
+                  Create Team
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Add Athlete to Team Form */}
+        {showAddAthleteForm && (
+          <motion.div
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-8"
+          >
+            <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
+              <h3 className="text-xl font-semibold text-white mb-4">Add Athlete to Team</h3>
+              <form onSubmit={handleAddAthlete} className="space-y-4">
+                <div>
+                  <label className="block text-blue-200">Athlete ID</label>
+                  <input
+                    type="text"
+                    value={addAthleteForm.athleteId}
+                    onChange={(e) => setAddAthleteForm({ ...addAthleteForm, athleteId: e.target.value })}
+                    className="w-full p-2 rounded-lg bg-gray-800/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-semibold transition-colors"
+                >
+                  Add Athlete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddAthleteForm(false)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
 
         {/* Team Selector */}
         <motion.div
@@ -190,13 +412,14 @@ const Dashboard = () => {
             <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
               <h3 className="text-xl font-semibold text-white mb-4">Athlete Status</h3>
               <div className="space-y-3">
-                {filteredAthleteData.length > 0 ? (
-                  filteredAthleteData.map((athlete) => (
+                {selectedTeamAthletes.length > 0 ? (
+                  selectedTeamAthletes.map((athlete) => (
                     <motion.div
                       key={athlete.athleteId}
-                      className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer"
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.2 }}
+                      onClick={() => handleAthleteClick(athlete.athleteId)}
                     >
                       <div className="flex items-center gap-3">
                         <div
@@ -205,28 +428,38 @@ const Dashboard = () => {
                               ? 'bg-blue-500'
                               : athlete.status === 'INJURED'
                               ? 'bg-red-500'
-                              : athlete.status === 'IMPROVING'
+                              : athlete.status === 'ACTIVE'
                               ? 'bg-green-500'
+                              : athlete.status === 'OVERTRAINING'
+                              ? 'bg-orange-500'
+                              : athlete.status === 'RESTING'
+                              ? 'bg-purple-500'
+                              : athlete.status === 'MODERATE'
+                              ? 'bg-yellow-500'
                               : 'bg-gray-400'
                           }`}
                         ></div>
                         <div>
-                          <p className="font-semibold text-white">{athlete.athleteName}</p>
-                          <p className="text-sm text-blue-300">{athlete.sport}</p>
+                          <p className="font-semibold text-white">{athlete.name || 'Unknown'}</p>
+                          <p className="text-sm text-blue-300">{athlete.sport || 'Unknown'}</p>
                         </div>
                       </div>
                       <p
                         className={`font-semibold ${
-                          athlete.status === 'PEAKING'
+                          athlete.status === 'PEAKING' || athlete.status === 'ACTIVE'
                             ? 'text-blue-300'
                             : athlete.status === 'INJURED'
                             ? 'text-red-400'
-                            : athlete.status === 'IMPROVING'
+                            : athlete.status === 'MODERATE'
                             ? 'text-green-400'
+                            : athlete.status === 'OVERTRAINING'
+                            ? 'text-orange-400'
+                            : athlete.status === 'RESTING'
+                            ? 'text-purple-400'
                             : 'text-gray-400'
                         }`}
                       >
-                        {athlete.status}
+                        Status: {athlete.status || 'Unknown'}
                       </p>
                     </motion.div>
                   ))
@@ -243,12 +476,24 @@ const Dashboard = () => {
               <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
                 <h3 className="text-xl font-semibold text-white mb-4">Team Performance</h3>
                 <div className="space-y-2 text-blue-200">
-                  <p><strong>Team:</strong> {teamPerformance.teamName}</p>
-                  <p><strong>Sport:</strong> {teamPerformance.sport}</p>
-                  <p><strong>Athletes:</strong> {teamPerformance.metrics.totalAthletes}</p>
-                  <p><strong>Training Load:</strong> {teamPerformance.metrics.averageTrainingLoad}</p>
-                  <p><strong>Recovery:</strong> {teamPerformance.metrics.averageRecoveryScore}</p>
-                  <p><strong>Fatigue:</strong> {teamPerformance.metrics.teamFatigueIndex}</p>
+                  <p>
+                    <strong>Team:</strong> {teamPerformance.teamName}
+                  </p>
+                  <p>
+                    <strong>Sport:</strong> {teamPerformance.sport}
+                  </p>
+                  <p>
+                    <strong>Athletes:</strong> {teamPerformance.metrics.totalAthletes}
+                  </p>
+                  <p>
+                    <strong>Training Load:</strong> {teamPerformance.metrics.averageTrainingLoad}
+                  </p>
+                  <p>
+                    <strong>Recovery:</strong> {teamPerformance.metrics.averageRecoveryScore}
+                  </p>
+                  <p>
+                    <strong>Fatigue:</strong> {teamPerformance.metrics.teamFatigueIndex}
+                  </p>
                 </div>
                 {teamPerformanceChartData && (
                   <div className="h-48 mt-4">
