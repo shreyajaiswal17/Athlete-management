@@ -14,11 +14,10 @@ import {
   Legend,
 } from 'chart.js';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import './CreateAthlete';
 
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+import CreateAthlete from './CreateAthlete';
+
+
 
 const Dashboard = () => {
 
@@ -52,7 +51,7 @@ const Dashboard = () => {
         const performanceResponse = await fetch(
           `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
         );
-       
+      if(selectedTeamId=='') console.log("heyy");
         if (!performanceResponse.ok) throw new Error('Failed to fetch team performance');
         const performanceData = await performanceResponse.json();
         console.log('Performance:', performanceData);
