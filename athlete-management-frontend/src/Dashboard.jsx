@@ -21,8 +21,7 @@ import './CreateAthlete';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth0();
+
 
   const [athleteData, setAthleteData] = useState([]);
   const [teams, setTeams] = useState([]);
@@ -53,9 +52,7 @@ const Dashboard = () => {
         const performanceResponse = await fetch(
           `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
         );
-        const performanceResponse = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
-        );
+       
         if (!performanceResponse.ok) throw new Error('Failed to fetch team performance');
         const performanceData = await performanceResponse.json();
         console.log('Performance:', performanceData);
