@@ -30,7 +30,8 @@ function App() {
           />
           <Route
             path="/dashboard"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+            // element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+            element = {<Dashboard/> }
           />
           <Route
             path="/athlete/:id"

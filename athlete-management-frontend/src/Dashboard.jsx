@@ -14,11 +14,16 @@ import {
   Legend,
 } from 'chart.js';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import './CreateAthlete';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { logout, user } = useAuth0();
+
   const [athleteData, setAthleteData] = useState([]);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -39,11 +44,15 @@ const Dashboard = () => {
       const teamsData = await teamsResponse.json();
       console.log('Teams Response:', teamsData);
       setTeams(teamsData);
+
       if (teamsData.length > 0 && !selectedTeamId) {
         setSelectedTeamId(teamsData[0]._id);
       }
 
       if (selectedTeamId) {
+        const performanceResponse = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
+        );
         const performanceResponse = await fetch(
           `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
         );
@@ -63,11 +72,20 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+
+      // Dummy fallback
       setAthleteData([
         { athleteId: '1', athleteName: 'Aditya Singh', sport: 'Sprint', status: 'PEAKING' },
         { athleteId: '2', athleteName: 'Rahul Patel', sport: 'Middle Distance', status: 'MODERATE' },
       ]);
-      setTeams([{ _id: '1', name: 'Sprint Team', sport: 'Sprint', athletes: [{ _id: '1' }, { _id: '2' }] }]);
+      setTeams([
+        {
+          _id: '1',
+          name: 'Sprint Team',
+          sport: 'Sprint',
+          athletes: [{ _id: '1' }, { _id: '2' }],
+        },
+      ]);
       setSelectedTeamId('1');
       setTeamPerformance({
         teamName: 'Sprint Team',
@@ -166,11 +184,11 @@ const Dashboard = () => {
 
   const teamPerformanceChartData = teamPerformance?.historicalMetrics
     ? {
-        labels: teamPerformance.historicalMetrics.map((metric) => metric.date),
+        labels: teamPerformance.historicalMetrics.map((m) => m.date),
         datasets: [
           {
             label: 'Training Load',
-            data: teamPerformance.historicalMetrics.map((metric) => metric.averageTrainingLoad),
+            data: teamPerformance.historicalMetrics.map((m) => m.averageTrainingLoad),
             borderColor: 'rgba(75,192,192,1)',
             backgroundColor: 'rgba(75,192,192,0.2)',
             fill: true,
@@ -178,7 +196,7 @@ const Dashboard = () => {
           },
           {
             label: 'Recovery Score',
-            data: teamPerformance.historicalMetrics.map((metric) => metric.averageRecoveryScore),
+            data: teamPerformance.historicalMetrics.map((m) => m.averageRecoveryScore),
             borderColor: 'rgba(153,102,255,1)',
             backgroundColor: 'rgba(153,102,255,0.2)',
             fill: true,
@@ -186,7 +204,7 @@ const Dashboard = () => {
           },
           {
             label: 'Fatigue Index',
-            data: teamPerformance.historicalMetrics.map((metric) => metric.teamFatigueIndex),
+            data: teamPerformance.historicalMetrics.map((m) => m.teamFatigueIndex),
             borderColor: 'rgba(255,99,132,1)',
             backgroundColor: 'rgba(255,99,132,0.2)',
             fill: true,
@@ -200,16 +218,29 @@ const Dashboard = () => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top', labels: { color: '#E5E7EB' } },
-      title: { display: true, text: 'Team Metrics Trend', color: '#E5E7EB' },
+      legend: {
+        position: 'top',
+        labels: { color: '#E5E7EB' },
+      },
+      title: {
+        display: true,
+        text: 'Team Metrics Trend',
+        color: '#E5E7EB',
+      },
     },
     scales: {
-      y: { beginAtZero: true, title: { display: true, text: 'Value', color: '#E5E7EB' }, ticks: { color: '#E5E7EB' } },
-      x: { title: { display: true, text: 'Date', color: '#E5E7EB' }, ticks: { color: '#E5E7EB' } },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Value', color: '#E5E7EB' },
+        ticks: { color: '#E5E7EB' },
+      },
+      x: {
+        title: { display: true, text: 'Date', color: '#E5E7EB' },
+        ticks: { color: '#E5E7EB' },
+      },
     },
   };
 
-  // Animation variants
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -403,9 +434,15 @@ const Dashboard = () => {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => navigate('/create-athlete')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold mx-10 px-5 py-2 rounded-2xl shadow transition duration-200"
+          >
+            + Create New Athlete
+          </button>
         </motion.div>
 
-        {/* Athlete Status and Team Performance */}
+        {/* Dashboard Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Athlete Status */}
           <motion.div variants={cardVariants} initial="hidden" animate="visible">
@@ -444,6 +481,7 @@ const Dashboard = () => {
                           <p className="text-sm text-blue-300">{athlete.sport || 'Unknown'}</p>
                         </div>
                       </div>
+                      
                       <p
                         className={`font-semibold ${
                           athlete.status === 'PEAKING' || athlete.status === 'ACTIVE'
@@ -467,6 +505,7 @@ const Dashboard = () => {
                   <p className="text-blue-300">No athletes in selected team</p>
                 )}
               </div>
+          
             </div>
           </motion.div>
 
@@ -496,7 +535,7 @@ const Dashboard = () => {
                   </p>
                 </div>
                 {teamPerformanceChartData && (
-                  <div className="h-48 mt-4">
+                  <div className="h-64 mt-4">
                     <Line data={teamPerformanceChartData} options={teamPerformanceChartOptions} />
                   </div>
                 )}
@@ -504,10 +543,20 @@ const Dashboard = () => {
             </motion.div>
           )}
         </div>
+        <div className="mt-12 flex justify-center">
+  <button
+    onClick={() => navigate('/performanceupdate/:athleteId')}
+    className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-8 py-4 rounded-3xl shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1"
+  >
+    🚀 Update Athlete Performance!
+  </button>
+</div>
+
       </main>
 
       {/* Footer */}
-      <footer className="bg-black/90 text-blue-300 text-center p-4 border-t border-blue-900">
+      <footer className="bg-black/90 text-blue-300 mt-18
+      text-center p-4 border-t border-blue-900">
         <p>© 2025 AthletixHub. All rights reserved.</p>
       </footer>
     </div>

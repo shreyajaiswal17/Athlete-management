@@ -66,15 +66,17 @@ const Home = () => {
           <p className="ml-2 text-sm md:text-base text-blue-300 opacity-90"></p>
         </div>
         <div className="flex space-x-6">
-          <Link to="/" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
+          <a href= "#home" className="text-lg  text-gray-400 hover:text-blue-300 transition-colors">
             About
-          </Link>
-          <Link to="/training" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Features
-          </Link>
-          <Link to="/nutrition" className="text-sm md:text-base text-gray-400 hover:text-blue-300 transition-colors">
-            Testimonial
-          </Link>
+          </a>
+          <a href="#features" className="text-lg text-gray-400 hover:text-blue-300 transition-colors">
+  Features
+</a>
+
+          <a  href= "#test" className="text-lg text-gray-400 hover:text-blue-300 transition-colors">
+            Testimonial  
+          </a>
+
         </div>
         <div className="flex space-x-4">
           <button className="text-sm md:text-base text-gray-400 hover:text-blue-300 focus:outline-none">
@@ -92,8 +94,8 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 py-12 md:py-16">
-        <div className="text-center md:text-left mb-8 md:mb-0">
+      <section className="relative z-10 flex flex-col md:flex-row items-center justify-between px-6 py-12 md:py-16" id='home'>
+        <div className="text-center md:text-left mb-8 md:mb-0" >
           <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2"></p>
           <p className="text-sm md:text-base text-blue-300 opacity-90 mb-2"></p>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Elevate Your Athletic Performance</h1>
@@ -114,7 +116,7 @@ const Home = () => {
       </section>
 
       {/* Features Section */}
-      <section className="px-6 py-12 md:py-16 bg-black/50">
+      <section className="px-6 py-12 md:py-16 bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000]" id='features'>
         <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-8">Elite Features for Elite Athletes</h2>
         <p className="text-center text-lg md:text-xl text-gray-200 mb-12 max-w-4xl mx-auto">
           Comprehensive tools designed to elevate your athletic performance and career.
@@ -134,8 +136,8 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="px-6 py-12 md:py-16 bg-black/80">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-8">Champions Speak</h2>
+      <section className="px-6 py-12 md:py-16 bg-black/80" id='test'>
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-8">Testimonial</h2>
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
             <p className="text-sm md:text-base text-gray-400 italic mb-4">
@@ -164,20 +166,10 @@ const Home = () => {
             */}
           </div>
         </div>
-        <p className="text-sm md:text-base">© 2025 AthletePro. All rights reserved.</p>
+        <p className="text-sm md:text-base">© 2025 AthletixHub. All rights reserved.</p>
       </footer>
 
-      {/* Scroll to Top Button */}
-      {showScroll && (
-        <motion.button
-          whileHover={{ scale: 1.1, rotate: 360 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={scrollTop}
-          className="fixed bottom-6 right-6 bg-blue-900 hover:bg-blue-800 text-white p-3 md:p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center text-sm md:text-base"
-        >
-          🏃‍♂️ <span className="ml-1 text-xs md:text-sm">🏁</span>
-        </motion.button>
-      )}
+     
 
       {/* Floating Chatbot Widget */}
       <Chatbot />
@@ -186,3 +178,8 @@ const Home = () => {
 };
 
 export default Home;
+
+
+
+
+
