@@ -15,13 +15,18 @@ import {
 } from 'chart.js';
 import { motion } from 'framer-motion';
 
-import CreateAthlete from './CreateAthlete';
-
-
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Dashboard = () => {
-
-
   const [athleteData, setAthleteData] = useState([]);
   const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState('');
@@ -30,6 +35,7 @@ const Dashboard = () => {
   const [addAthleteForm, setAddAthleteForm] = useState({ athleteId: '' });
   const [showCreateTeamForm, setShowCreateTeamForm] = useState(false);
   const [showAddAthleteForm, setShowAddAthleteForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(''); // Add to state
   const { logout, user } = useAuth0();
   const navigate = useNavigate();
 
@@ -37,42 +43,48 @@ const Dashboard = () => {
     try {
       console.log('API URL:', import.meta.env.VITE_API_URL);
 
+      // Fetch teams
       const teamsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/teams`);
       if (!teamsResponse.ok) throw new Error('Failed to fetch teams');
       const teamsData = await teamsResponse.json();
       console.log('Teams Response:', teamsData);
       setTeams(teamsData);
 
-      if (teamsData.length > 0 && !selectedTeamId) {
-        setSelectedTeamId(teamsData[0]._id);
-      }
-
+      // Fetch data based on selectedTeamId
       if (selectedTeamId) {
+        // Fetch team-specific performance
         const performanceResponse = await fetch(
           `${import.meta.env.VITE_API_URL}/api/athlete/team-performance/${selectedTeamId}`
         );
-      if(selectedTeamId=='') console.log("heyy");
         if (!performanceResponse.ok) throw new Error('Failed to fetch team performance');
         const performanceData = await performanceResponse.json();
         console.log('Performance:', performanceData);
         setTeamPerformance(performanceData);
 
-        // Populate athleteData with athleteStatuses
+        // Populate athleteData with team athleteStatuses
         const athleteStatusData = performanceData.athleteStatuses?.map(status => ({
           athleteId: status.athleteId,
-          athleteName: status.name,
+          name: status.name,
           sport: status.sport,
           status: status.status,
         })) || [];
         setAthleteData(athleteStatusData);
+      } else {
+        // Fetch all athletes when no team is selected
+        const allAthletesResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/athletes`);
+        if (!allAthletesResponse.ok) throw new Error('Failed to fetch all athletes');
+        const allAthletesData = await allAthletesResponse.json();
+        console.log('All Athletes:', allAthletesData);
+        setAthleteData(allAthletesData);
+        setTeamPerformance(null); // Clear team performance when showing all athletes
       }
     } catch (error) {
       console.error('Error fetching data:', error);
 
       // Dummy fallback
       setAthleteData([
-        { athleteId: '1', athleteName: 'Aditya Singh', sport: 'Sprint', status: 'PEAKING' },
-        { athleteId: '2', athleteName: 'Rahul Patel', sport: 'Middle Distance', status: 'MODERATE' },
+        { athleteId: '1', name: 'Aditya Singh', sport: 'Sprint', status: 'PEAKING' },
+        { athleteId: '2', name: 'Rahul Patel', sport: 'Middle Distance', status: 'MODERATE' },
       ]);
       setTeams([
         {
@@ -98,17 +110,6 @@ const Dashboard = () => {
           { date: '2025-04-10', averageTrainingLoad: 75, averageRecoveryScore: 80, teamFatigueIndex: 30 },
         ],
       });
-    }
-  };
-
-  const fetchAllAthletes = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/athlete/data`);
-      if (!response.ok) throw new Error('Failed to fetch all athletes');
-      const data = await response.json();
-      setAthleteData(data);
-    } catch (error) {
-      console.error('Error fetching all athletes:', error);
     }
   };
 
@@ -168,14 +169,14 @@ const Dashboard = () => {
     setSelectedTeamId(e.target.value);
   };
 
-  // Use athleteStatuses from teamPerformance for selected team
+  // Determine athletes to display
   const selectedTeam = teams.find((team) => team._id === selectedTeamId);
   console.log('Selected Team:', selectedTeam);
   const selectedTeamAthletes = selectedTeam && teamPerformance?.athleteStatuses
     ? teamPerformance.athleteStatuses.filter((athlete) =>
         selectedTeam.athletes.some((teamAthlete) => teamAthlete._id === athlete.athleteId)
       )
-    : [];
+    : athleteData; // Use all athletes if no team is selected
   console.log('selectedTeamAthletes', selectedTeamAthletes);
 
   const teamPerformanceChartData = teamPerformance?.historicalMetrics
@@ -442,68 +443,98 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Athlete Status */}
           <motion.div variants={cardVariants} initial="hidden" animate="visible">
-            <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
-              <h3 className="text-xl font-semibold text-white mb-4">Athlete Status</h3>
-              <div className="space-y-3">
-                {selectedTeamAthletes.length > 0 ? (
-                  selectedTeamAthletes.map((athlete) => (
-                    <motion.div
-                      key={athlete.athleteId}
-                      className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => handleAthleteClick(athlete.athleteId)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-6 h-6 rounded-full ${
-                            athlete.status === 'PEAKING'
-                              ? 'bg-blue-500'
-                              : athlete.status === 'INJURED'
-                              ? 'bg-red-500'
-                              : athlete.status === 'ACTIVE'
-                              ? 'bg-green-500'
-                              : athlete.status === 'OVERTRAINING'
-                              ? 'bg-orange-500'
-                              : athlete.status === 'RESTING'
-                              ? 'bg-purple-500'
-                              : athlete.status === 'MODERATE'
-                              ? 'bg-yellow-500'
-                              : 'bg-gray-400'
-                          }`}
-                        ></div>
-                        <div>
-                          <p className="font-semibold text-white">{athlete.name || 'Unknown'}</p>
-                          <p className="text-sm text-blue-300">{athlete.sport || 'Unknown'}</p>
-                        </div>
-                      </div>
-                      
-                      <p
-                        className={`font-semibold ${
-                          athlete.status === 'PEAKING' || athlete.status === 'ACTIVE'
-                            ? 'text-blue-300'
-                            : athlete.status === 'INJURED'
-                            ? 'text-red-400'
-                            : athlete.status === 'MODERATE'
-                            ? 'text-green-400'
-                            : athlete.status === 'OVERTRAINING'
-                            ? 'text-orange-400'
-                            : athlete.status === 'RESTING'
-                            ? 'text-purple-400'
-                            : 'text-gray-400'
-                        }`}
-                      >
-                        Status: {athlete.status || 'Unknown'}
-                      </p>
-                    </motion.div>
-                  ))
-                ) : (
-                  <p className="text-blue-300">No athletes in selected team</p>
-                )}
+  <div className="bg-gray-900/50 backdrop-blur-md p-6 rounded-lg shadow-lg border border-blue-900/30">
+    <h3 className="text-xl font-semibold text-white mb-4">Athlete Status</h3>
+    {/* Summary Metrics */}
+    <div className="mb-4 p-4 bg-gray-800/30 rounded-lg">
+      <h4 className="text-lg font-semibold text-white">All Athletes Summary</h4>
+      <div className="grid grid-cols-2 gap-2 text-blue-200">
+        <p><strong>Total Athletes:</strong> {selectedTeamAthletes.length}</p>
+        <p><strong>Peaking:</strong> {selectedTeamAthletes.filter(a => a.status === 'PEAKING').length}</p>
+        <p><strong>Active:</strong> {selectedTeamAthletes.filter(a => a.status === 'ACTIVE').length}</p>
+        <p><strong>Injured:</strong> {selectedTeamAthletes.filter(a => a.status === 'INJURED').length}</p>
+      </div>
+    </div>
+    {/* Status Filter */}
+    <div className="mb-4">
+      <label className="font-semibold text-blue-200 mr-2">Filter by Status:</label>
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+        className="p-2 rounded-lg bg-gray-900/50 text-white border border-blue-900/30 focus:outline-none focus:ring-2 focus:ring-blue-300"
+      >
+        <option value="">All Statuses</option>
+        <option value="PEAKING">Peaking</option>
+        <option value="ACTIVE">Active</option>
+        <option value="INJURED">Injured</option>
+        <option value="MODERATE">Moderate</option>
+        <option value="OVERTRAINING">Overtraining</option>
+        <option value="RESTING">Resting</option>
+      </select>
+    </div>
+    {/* Athlete List */}
+    <div className="space-y-3">
+      {selectedTeamAthletes
+        .filter((athlete) => !statusFilter || athlete.status === statusFilter)
+        .length > 0 ? (
+        selectedTeamAthletes
+          .filter((athlete) => !statusFilter || athlete.status === statusFilter)
+          .map((athlete) => (
+            <motion.div
+              key={athlete.athleteId}
+              className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => handleAthleteClick(athlete.athleteId)}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-6 h-6 rounded-full ${
+                    athlete.status === 'PEAKING'
+                      ? 'bg-blue-500'
+                      : athlete.status === 'INJURED'
+                      ? 'bg-red-500'
+                      : athlete.status === 'ACTIVE'
+                      ? 'bg-green-500'
+                      : athlete.status === 'OVERTRAINING'
+                      ? 'bg-orange-500'
+                      : athlete.status === 'RESTING'
+                      ? 'bg-purple-500'
+                      : athlete.status === 'MODERATE'
+                      ? 'bg-yellow-500'
+                      : 'bg-gray-400'
+                  }`}
+                ></div>
+                <div>
+                  <p className="font-semibold text-white">{athlete.name || 'Unknown'}</p>
+                  <p className="text-sm text-blue-300">{athlete.sport || 'Unknown'}</p>
+                </div>
               </div>
-          
-            </div>
-          </motion.div>
+              <p
+                className={`font-semibold ${
+                  athlete.status === 'PEAKING' || athlete.status === 'ACTIVE'
+                    ? 'text-blue-300'
+                    : athlete.status === 'INJURED'
+                    ? 'text-red-400'
+                    : athlete.status === 'MODERATE'
+                    ? 'text-green-400'
+                    : athlete.status === 'OVERTRAINING'
+                    ? 'text-orange-400'
+                    : athlete.status === 'RESTING'
+                    ? 'text-purple-400'
+                    : 'text-gray-400'
+                }`}
+              >
+                Status: {athlete.status || 'Unknown'}
+              </p>
+            </motion.div>
+          ))
+      ) : (
+        <p className="text-blue-300">No athletes match the selected status</p>
+      )}
+    </div>
+  </div>
+</motion.div>
 
           {/* Team Performance */}
           {selectedTeamId && teamPerformance && (
@@ -540,19 +571,17 @@ const Dashboard = () => {
           )}
         </div>
         <div className="mt-12 flex justify-center">
-  <button
-    onClick={() => navigate('/performanceupdate/:athleteId')}
-    className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-8 py-4 rounded-3xl shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1"
-  >
-    🚀 Update Athlete Performance!
-  </button>
-</div>
-
+          <button
+            onClick={() => navigate('/performanceupdate/:athleteId')}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold px-8 py-4 rounded-3xl shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1"
+          >
+            🚀 Update Athlete Performance!
+          </button>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-black/90 text-blue-300 mt-18
-      text-center p-4 border-t border-blue-900">
+      <footer className="bg-black/90 text-blue-300 mt-18 text-center p-4 border-t border-blue-900">
         <p>© 2025 AthletixHub. All rights reserved.</p>
       </footer>
     </div>
