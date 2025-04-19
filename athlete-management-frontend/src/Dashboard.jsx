@@ -75,7 +75,15 @@ const Dashboard = () => {
         if (!allAthletesResponse.ok) throw new Error('Failed to fetch all athletes');
         const allAthletesData = await allAthletesResponse.json();
         console.log('All Athletes:', allAthletesData);
-        setAthleteData(allAthletesData);
+        // Normalize to use athleteId instead of _id
+        const normalizedAthletes = allAthletesData.map(athlete => ({
+          athleteId: athlete.athleteId, // Map _id to athleteId
+          name: athlete.name,
+          sport: athlete.sport,
+          status: athlete.status,
+        }));
+        console.log('Normalized Athletes:', normalizedAthletes);
+        setAthleteData(normalizedAthletes);
         setTeamPerformance(null); // Clear team performance when showing all athletes
       }
     } catch (error) {
@@ -175,7 +183,12 @@ const Dashboard = () => {
   const selectedTeamAthletes = selectedTeam && teamPerformance?.athleteStatuses
     ? teamPerformance.athleteStatuses.filter((athlete) =>
         selectedTeam.athletes.some((teamAthlete) => teamAthlete._id === athlete.athleteId)
-      )
+      ).map((athlete) => ({
+        athleteId: athlete.athleteId,
+        name: athlete.name,
+        sport: athlete.sport,
+        status: athlete.status,
+      }))
     : athleteData; // Use all athletes if no team is selected
   console.log('selectedTeamAthletes', selectedTeamAthletes);
 
@@ -245,6 +258,12 @@ const Dashboard = () => {
 
   // Navigate to AthleteDetail
   const handleAthleteClick = (athleteId) => {
+    if (!athleteId) {
+      console.error('Athlete ID is undefined');
+      alert('Cannot navigate: Athlete ID is missing');
+      return;
+    }
+    console.log('Athlete ID:', athleteId);
     navigate(`/athlete/${athleteId}`);
   };
 
@@ -487,7 +506,7 @@ const Dashboard = () => {
               className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              onClick={() => handleAthleteClick(athlete._id)}
+              onClick={() => handleAthleteClick(athlete.athleteId)}
             >
               <div className="flex items-center gap-3">
                 <div

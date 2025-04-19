@@ -268,17 +268,13 @@ router.get('/training-metrics/:id', async (req, res) => {
 // GET /api/athlete/athletes
 router.get('/athletes', async (req, res) => {
   try {
-    // Fetch all athletes
     const athletes = await Athlete.find({}, 'name sport _id athleteId injuryHistory age');
-
-    // Fetch latest AthleteData for all athletes in one query
     const athleteData = await AthleteData.find({
       athleteId: { $in: athletes.map(a => a._id) },
     })
       .sort({ timestamp: -1 })
       .lean();
 
-    // Create a map of latest AthleteData per athlete
     const latestDataMap = {};
     athleteData.forEach(data => {
       const athleteId = data.athleteId.toString();
@@ -287,14 +283,12 @@ router.get('/athletes', async (req, res) => {
       }
     });
 
-    // Calculate status for each athlete
     const athletesWithStatus = await Promise.all(
       athletes.map(async (athlete) => {
         try {
           const status = await calculateAthleteStatus(athlete._id);
           return {
-            _id: athlete._id,
-            athleteId: athlete.athleteId,
+            athleteId: athlete._id, // Use athleteId instead of _id
             name: athlete.name,
             sport: athlete.sport,
             status,
@@ -302,8 +296,7 @@ router.get('/athletes', async (req, res) => {
         } catch (error) {
           console.error(`Error calculating status for athlete ${athlete._id}:`, error);
           return {
-            _id: athlete._id,
-            athleteId: athlete.athleteId,
+            athleteId: athlete._id,
             name: athlete.name,
             sport: athlete.sport,
             status: 'UNKNOWN',
