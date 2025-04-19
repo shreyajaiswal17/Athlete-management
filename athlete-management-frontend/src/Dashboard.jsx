@@ -473,6 +473,7 @@ const Dashboard = () => {
       </select>
     </div>
     {/* Athlete List */}
+   
     <div className="space-y-3">
       {selectedTeamAthletes
         .filter((athlete) => !statusFilter || athlete.status === statusFilter)
@@ -480,12 +481,13 @@ const Dashboard = () => {
         selectedTeamAthletes
           .filter((athlete) => !statusFilter || athlete.status === statusFilter)
           .map((athlete) => (
+            
             <motion.div
               key={athlete.athleteId}
               className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg cursor-pointer"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
-              onClick={() => handleAthleteClick(athlete.athleteId)}
+              onClick={() => handleAthleteClick(athlete._id)}
             >
               <div className="flex items-center gap-3">
                 <div
@@ -503,7 +505,8 @@ const Dashboard = () => {
                       : athlete.status === 'MODERATE'
                       ? 'bg-yellow-500'
                       : 'bg-gray-400'
-                  }`}
+                  }`
+                }
                 ></div>
                 <div>
                   <p className="font-semibold text-white">{athlete.name || 'Unknown'}</p>
