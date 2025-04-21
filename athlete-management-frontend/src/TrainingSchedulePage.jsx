@@ -80,12 +80,7 @@ function TrainingSchedulePage() {
       ) : (
         <p className="text-gray-400">Generating training schedule...</p>
       )}
-      <button
-        onClick={() => navigate(`/athlete/${id}`)}
-        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-      >
-        Back to Athlete Dashboard
-      </button>
+      
     </div>
   );
 }

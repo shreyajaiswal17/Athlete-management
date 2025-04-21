@@ -260,12 +260,7 @@ function PerformanceTrendsPage() {
       ) : (
         <p>No performance data available.</p>
       )}
-      <button
-        onClick={() => navigate(`/athlete/${id}`)}
-        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-      >
-        Back to Athlete Dashboard
-      </button>
+      
 
       {modalContent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">

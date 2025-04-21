@@ -8,6 +8,10 @@ import { useAuth0 } from '@auth0/auth0-react';
 import PerformanceUpdateForm from './PerformanceUpdateForm.jsx';
 import Chatbot from './Chatbot';
 import AthleteDetPage from "./AthleteDetPage.jsx"
+import FinancialPage from './FinancialPage.jsx';
+import InjuryPreventionPage from './InjuryPreventionPage.jsx';
+import CareerGuidancePage from './CareerGuidancePage.jsx';
+
 function App() {
   const { isAuthenticated, isLoading, error } = useAuth0();
 
@@ -35,8 +39,12 @@ function App() {
           />
           <Route
             path="/athlete/:id"
-            element={isAuthenticated ? <AthleteDetailPage /> : <Navigate to="/login" />}
+            element={isAuthenticated ? <AthleteDetPage /> : <Navigate to="/login" />}
           />
+          <Route path="/athlete/:id/injury" element={<InjuryPreventionPage />} />
+          <Route path="/athlete/:id/financial" element={<FinancialPage />}/>
+          <Route path="/athlete/:id/career" element={<CareerGuidancePage/>}/>
+         
           <Route path="/performanceupdate/:athleteId" element={<PerformanceUpdateForm />} />
           <Route
             path="/create-athlete"
@@ -58,3 +66,4 @@ export default App;
 
 
 
+ 

@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
-
+import PerformanceTrendsPage from './PerformanceTrendsPage.jsx';
+import TrainingSchedulePage from './TrainingSchedulePage.jsx';
+import MealPlan from './MealPlan.jsx';
 const fallbackAthleteData = {
   1: { id: 1, athleteName: 'John Doe', sport: 'Basketball', role: 'Guard', age: 25, education: 'BS in Kinesiology', careerGoals: ['Professional Athlete'], performance: 'Excellent', injuryHistory: [], competitionHistory: [] },
   2: { id: 2, athleteName: 'Jane Smith', sport: 'Swimming', role: 'Freestyler', age: 22, education: 'BA in Sports Management', careerGoals: ['Coach'], performance: 'Good', injuryHistory: [], competitionHistory: [] },
@@ -65,26 +67,18 @@ function AthleteDetailPage() {
           <p><strong>Competition Wins:</strong> {calculateCompetitionWins(athleteData.competitionHistory)}</p>
         </div>
       </div>
-
+      <PerformanceTrendsPage/>
+      <TrainingSchedulePage/>
+      <MealPlan/>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button
-          onClick={() => navigate(`/athlete/${id}/PerformanceTrendsPage`)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          Performance Trends
-        </button>
+  
         <button
           onClick={() => navigate(`/athlete/${id}/injury`)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
         >
           Injury Prevention
         </button>
-        <button
-          onClick={() => navigate(`/athlete/${id}/training`)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          Training Schedule
-        </button>
+       
         <button
           onClick={() => navigate(`/athlete/${id}/career`)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
@@ -97,12 +91,7 @@ function AthleteDetailPage() {
         >
           Financial Planning
         </button>
-        <button
-          onClick={() => navigate(`/athlete/${id}/meal-plan`)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          Meal Plan
-        </button>
+      
       </div>
 
       <div className="flex justify-between mt-6">
