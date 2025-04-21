@@ -4,9 +4,9 @@
   padding: 2rem;
   text-align: center;
 }
-body {
+/* body {
   @apply bg-[#1b0621] text-white;
-}
+} */
 
 .logo {
   height: 6em;
