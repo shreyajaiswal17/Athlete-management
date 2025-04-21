@@ -7,7 +7,7 @@ import Home from './Home.jsx';
 import { useAuth0 } from '@auth0/auth0-react';
 import PerformanceUpdateForm from './PerformanceUpdateForm.jsx';
 import Chatbot from './Chatbot';
-
+import AthleteDetPage from "./AthleteDetPage.jsx"
 function App() {
   const { isAuthenticated, isLoading, error } = useAuth0();
 
@@ -43,6 +43,7 @@ function App() {
             element={isAuthenticated ? <CreateAthlete /> : <Navigate to="/login" />}
           />
           <Route path="/chatbot" element={<Chatbot />} />
+          {/* <Route path="/ath" element={<AthleteDetPage />} /> */}
         </Routes>
         <Chatbot/>
       </div>
