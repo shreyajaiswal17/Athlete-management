@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login.jsx';
 import Dashboard from './Dashboard.jsx';
-import AthleteDetailPage from './AthleteDetailPage.jsx';
+// import AthleteDetailPage from './AthleteDetailPage.jsx';
 import CreateAthlete from './CreateAthlete.jsx';
 import Home from './Home.jsx';
 import { useAuth0 } from '@auth0/auth0-react';

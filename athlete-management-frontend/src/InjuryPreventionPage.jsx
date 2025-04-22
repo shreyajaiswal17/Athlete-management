@@ -228,7 +228,7 @@ function InjuryPreventionPage() {
   if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400">Athlete not found</div>;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] text-white p-6">
       <h1 className="text-3xl font-bold mb-6">Injury Prevention</h1>
       {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded">{error}</p>}
       <p className="mt-2">{trainingMetrics.insights.trainingLoad}</p>
