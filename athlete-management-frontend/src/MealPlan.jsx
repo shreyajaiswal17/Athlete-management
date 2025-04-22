@@ -38,7 +38,7 @@ const MealPlan = () => {
           name="height"
           value={mealPlanInput.height}
           onChange={handleMealPlanInputChange}
-          className="mt-1 block w-full bg-gray-700 text-white border border-gray-600 rounded-md p-2"
+          className="mt-1 block w-full bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000] text-white border border-gray-600 rounded-md p-2"
           placeholder="Enter height in cm"
         />
       </div>

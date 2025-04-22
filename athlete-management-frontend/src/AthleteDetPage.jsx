@@ -49,7 +49,7 @@ function AthleteDetailPage() {
   if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400">Athlete not found</div>;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000] text-white p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{athleteData.athleteName}</h1>
         <span className="text-sm text-gray-400">User: {user.name}</span>
@@ -57,7 +57,7 @@ function AthleteDetailPage() {
 
       {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded">{error}</p>}
 
-      <div className="bg-gray-800 p-4 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow">
+      <div className="bg-gradient-to-br from-[#023E8A] via-[#0077B6] to-[#000000] p-4 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <p><strong>Sport:</strong> {athleteData.sport || 'Not specified'}</p>
           <p><strong>Role:</strong> {athleteData.role || 'General'}</p>
