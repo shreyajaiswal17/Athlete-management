@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
@@ -215,16 +216,16 @@ function CareerGuidancePage() {
         const injuryFactor = injuryCount > 1 ? 1.2 : 1;
         const yearsToGoal = Math.round(baselineYearsToGoal * trainingFactor * winsFactor * injuryFactor);
 
-        let analysis = `<h3 class="text-teal-400 text-lg font-semibold">Career Analysis (Age ${age}, ${sport})</h3><p class="mt-2"><strong class="text-gray-300">Profile:</strong> Training <span class="text-yellow-300">${hoursTrained} hours/week</span>, ${sessionsPerWeek} sessions, ${restDays} rest days, ${injuryCount} injuries, ${competitionWins} wins. <em class="text-gray-400">Education:</em> ${education}. <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}</p>`;
+        let analysis = `<h3 class="text-teal-400 text-xl font-semibold">Career Analysis (Age ${age}, ${sport})</h3><p class="mt-2 text-lg"><strong class="text-gray-300">Profile:</strong> Training <span class="text-yellow-300">${hoursTrained} hours/week</span>, ${sessionsPerWeek} sessions, ${restDays} rest days, ${injuryCount} injuries, ${competitionWins} wins. <em class="text-gray-400">Education:</em> ${education}. <em class="text-gray-400">Goals:</em> ${careerGoals.join(', ')}</p>`;
         
         if (guidance === 'Focus on Training') {
-          analysis += `<h4 class="text-blue-400 mt-4">Build Elite Potential (Probability: ${Math.round(probabilities[0] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> Your ${hoursTrained} hours/week and ${competitionWins} win(s) show promise, but reaching elite ${sport} levels requires a bigger push.</li><li><strong class="text-gray-300">Next Steps:</strong> Boost to <span class="text-green-400">${(hoursTrained * 1.2).toFixed(1)} hours/week</span> with ${sport}-specific skills (e.g., ${sport === 'Swimming' ? 'flip turns' : sport === 'Track' ? 'sprint starts' : sport === 'Cricket' ? 'bowling accuracy' : 'core drills'}).</li></ul>`;
+          analysis += `<h4 class="text-blue-400 mt-4 text-lg">Build Elite Potential (Probability: ${Math.round(probabilities[0] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300 text-lg">Why:</strong> Your ${hoursTrained} hours/week and ${competitionWins} win(s) show promise, but reaching elite ${sport} levels requires a bigger push.</li><li><strong class="text-gray-300 text-lg">Next Steps:</strong> Boost to <span class="text-green-400">${(hoursTrained * 1.2).toFixed(1)} hours/week</span> with ${sport}-specific skills (e.g., ${sport === 'Swimming' ? 'flip turns' : sport === 'Track' ? 'sprint starts' : sport === 'Cricket' ? 'bowling accuracy' : 'core drills'}).</li></ul>`;
         } else if (guidance === 'Competition Ready') {
-          analysis += `<h4 class="text-green-400 mt-4">Competition Ready (Probability: ${Math.round(probabilities[1] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> With ${competitionWins} win(s) and a strong ${hoursTrained} hours/week base, you’re ready to shine in ${sport} events.</li><li><strong class="text-gray-300">Next Steps:</strong> Compete quarterly to sharpen skills under pressure.</li></ul>`;
+          analysis += `<h4 class="text-green-400 mt-4 text-lg">Competition Ready (Probability: ${Math.round(probabilities[1] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300 text-lg">Why:</strong> With ${competitionWins} win(s) and a strong ${hoursTrained} hours/week base, you’re ready to shine in ${sport} events.</li><li><strong class="text-gray-300 text-lg">Next Steps:</strong> Compete quarterly to sharpen skills under pressure.</li></ul>`;
         } else if (guidance === 'Sustain Performance') {
-          analysis += `<h4 class="text-orange-400 mt-4">Refine and Sustain (Probability: ${Math.round(probabilities[2] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300">Why:</strong> Your ${hoursTrained} hours/week and ${injuryCount} injuries show strength, but balance is key to avoid setbacks.</li><li><strong className="text-gray-300">Next Steps:</strong> Keep <span class="text-green-400">${hoursTrained} hours/week</span>, spread into ${Math.min(sessionsPerWeek + 1, 6)} sessions, and add 1-2 rest days.</li></ul>`;
+          analysis += `<h4 class="text-orange-400 mt-4 text-lg">Refine and Sustain (Probability: ${Math.round(probabilities[2] * 100)}%)</h4><ul class="list-disc pl-5 mt-2"><li><strong class="text-gray-300 text-lg">Why:</strong> Your ${hoursTrained} hours/week and ${injuryCount} injuries show strength, but balance is key to avoid setbacks.</li><li><strong className="text-gray-300 text-lg">Next Steps:</strong> Keep <span class="text-green-400">${hoursTrained} hours/week</span>, spread into ${Math.min(sessionsPerWeek + 1, 6)} sessions, and add 1-2 rest days.</li></ul>`;
         }
-        analysis += `<p class="mt-4"><strong class="text-gray-300">Probability Breakdown:</strong> Build Elite Potential (<span class="text-blue-400">${Math.round(probabilities[0] * 100)}%</span>), Competition Ready (<span class="text-green-400">${Math.round(probabilities[1] * 100)}%</span>), Refine and Sustain (<span class="text-orange-400">${Math.round(probabilities[2] * 100)}%</span>)</p>`;
+        analysis += `<p class="mt-4 text-lg"><strong class="text-gray-300">Probability Breakdown:</strong> Build Elite Potential (<span class="text-blue-400">${Math.round(probabilities[0] * 100)}%</span>), Competition Ready (<span class="text-green-400">${Math.round(probabilities[1] * 100)}%</span>), Refine and Sustain (<span class="text-orange-400">${Math.round(probabilities[2] * 100)}%</span>)</p>`;
 
         setCareerGuidance({ 
           guidance: guidance === 'Focus on Training' ? 'Build Elite Potential' : guidance === 'Sustain Performance' ? 'Refine and Sustain' : guidance, 
@@ -253,43 +254,47 @@ function CareerGuidancePage() {
 
   const careerProbabilityOptions = {
     responsive: true,
+    maintainAspectRatio: false, // Allows custom height without distorting
     plugins: {
-      legend: { position: 'top', labels: { color: '#ffffff' } },
-      title: { display: true, text: 'Career Guidance Probabilities', color: '#ffffff' },
+      legend: { position: 'top', labels: { color: '#ffffff', font: { size: 16 } } },
+      title: { display: true, text: 'Career Guidance Probabilities', color: '#ffffff', font: { size: 20 } },
     },
     scales: {
-      y: { beginAtZero: true, max: 100, title: { display: true, text: 'Probability (%)', color: '#ffffff' }, ticks: { color: '#ffffff' }, grid: { color: '#444' } },
-      x: { ticks: { color: '#ffffff' }, grid: { color: '#444' } },
+      y: { beginAtZero: true, max: 100, title: { display: true, text: 'Probability (%)', color: '#ffffff' }, ticks: { color: '#ffffff', font: { size: 14 } }, grid: { color: '#444' } },
+      x: { ticks: { color: '#ffffff', font: { size: 14 } }, grid: { color: '#444' } },
+    },
+    layout: {
+      padding: 20,
     },
   };
 
-  if (!athleteData && !error) return <div className="flex items-center justify-center min-h-screen text-gray-400">Loading...</div>;
-  if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400">Athlete not found</div>;
+  if (!athleteData && !error) return <div className="flex items-center justify-center min-h-screen text-gray-400 text-xl">Loading...</div>;
+  if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400 text-xl">Athlete not found</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Career Guidance</h1>
-      {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded">{error}</p>}
+      <h1 className="text-4xl font-bold mb-6">Career Guidance</h1>
+      {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded text-lg">{error}</p>}
       {careerGuidance.guidance ? (
         <>
-          <p className="text-lg"><strong className="text-gray-300">Guidance:</strong> <span className="text-teal-400">{careerGuidance.guidance}</span></p>
-          <div className="mt-4 text-sm" dangerouslySetInnerHTML={{ __html: careerGuidance.analysis }} />
-          <p className="mt-4"><strong className="text-gray-300">Estimated Time to Goal:</strong> <span className="text-green-400">{careerGuidance.yearsToGoal} years</span></p>
-          <div className="h-64 mt-4">
+          <p className="text-xl"><strong className="text-gray-300">Guidance:</strong> <span className="text-teal-400">{careerGuidance.guidance}</span></p>
+          <div className="mt-4 text-lg" dangerouslySetInnerHTML={{ __html: careerGuidance.analysis }} />
+          <p className="mt-4 text-xl"><strong className="text-gray-300">Estimated Time to Goal:</strong> <span className="text-green-400">{careerGuidance.yearsToGoal} years</span></p>
+          <div className="h-64 mt-4 w-full"> {/* Increased height to 64 */}
             <Bar data={careerProbabilityData} options={careerProbabilityOptions} />
           </div>
           <div className="mt-4">
-            <h3 className="text-lg font-medium text-blue-400">Career Tools ({athleteData.sport || 'General'})</h3>
+            <h3 className="text-xl font-medium text-blue-400">Career Tools ({athleteData.sport || 'General'})</h3>
             <ul className="list-disc pl-5 mt-2">
               {careerResources[athleteData.sport]?.[careerGuidance.guidance]?.map((resource, index) => (
-                <li key={index} className="text-gray-300">
+                <li key={index} className="text-lg">
                   <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
                     {resource.name}
                   </a>
                   <span className="text-gray-400"> - {resource.desc}</span>
                 </li>
               )) || careerResources['General'][careerGuidance.guidance].map((resource, index) => (
-                <li key={index} className="text-gray-300">
+                <li key={index} className="text-lg">
                   <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
                     {resource.name}
                   </a>
@@ -300,11 +305,11 @@ function CareerGuidancePage() {
           </div>
         </>
       ) : (
-        <p className="text-gray-400">Analyzing career guidance...</p>
+        <p className="text-lg">Analyzing career guidance...</p>
       )}
       <button
         onClick={() => navigate(`/athlete/${id}`)}
-        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-lg"
       >
         Back to Athlete Dashboard
       </button>

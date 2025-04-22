@@ -214,65 +214,69 @@ function InjuryPreventionPage() {
 
   const trainingMetricsOptions = {
     responsive: true,
+    maintainAspectRatio: false, // Allows custom height without distorting
     plugins: {
-      legend: { position: 'top', labels: { color: '#ffffff' } },
-      title: { display: true, text: 'Training Metrics', color: '#ffffff' },
+      legend: { position: 'top', labels: { color: '#ffffff', font: { size: 16 } } },
+      title: { display: true, text: 'Training Metrics', color: '#ffffff', font: { size: 20 } },
     },
     scales: {
-      y: { beginAtZero: true, max: 400, ticks: { color: '#ffffff' }, grid: { color: '#444' } },
-      x: { ticks: { color: '#ffffff' }, grid: { color: '#444' } },
+      y: { beginAtZero: true, max: 400, ticks: { color: '#ffffff', font: { size: 14 } }, grid: { color: '#444' } },
+      x: { ticks: { color: '#ffffff', font: { size: 14 } }, grid: { color: '#444' } },
+    },
+    layout: {
+      padding: 20,
     },
   };
 
-  if (!athleteData && !error) return <div className="flex items-center justify-center min-h-screen text-gray-400">Loading...</div>;
-  if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400">Athlete not found</div>;
+  if (!athleteData && !error) return <div className="flex items-center justify-center min-h-screen text-gray-400 text-xl">Loading...</div>;
+  if (!athleteData) return <div className="flex items-center justify-center min-h-screen text-red-400 text-xl">Athlete not found</div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#023E8A] via-[#0077B6] text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Injury Prevention</h1>
-      {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded">{error}</p>}
-      <p className="mt-2">{trainingMetrics.insights.trainingLoad}</p>
+      <h1 className="text-4xl font-bold mb-6">Injury Prevention</h1>
+      {error && <p className="text-red-400 mb-4 bg-red-900/20 p-2 rounded text-lg">{error}</p>}
+      <p className="mt-2 text-lg">{trainingMetrics.insights.trainingLoad}</p>
       <div className="mt-4">
-        <h3 className="text-lg font-medium text-blue-400">Recommendations</h3>
+        <h3 className="text-xl font-medium text-blue-400">Recommendations</h3>
         <ul className="list-disc pl-5 mt-2">
           {trainingMetrics.recommendations.map((rec, index) => (
-            <li key={index} className="text-gray-300">
+            <li key={index} className="text-lg">
               <strong>{rec.recommendation}:</strong> {rec.explanation}
             </li>
           ))}
         </ul>
       </div>
-      <div className="h-64 mt-4">
+      <div className="h-64 mt-4 w-full"> {/* Increased height to 64 (adjust as needed) */}
         <Bar data={trainingMetricsData} options={trainingMetricsOptions} />
       </div>
       {athleteData.injuryHistory?.length > 0 ? (
-        <table className="w-full mt-2 text-sm border border-gray-600">
+        <table className="w-full mt-2 text-base border border-gray-600">
           <thead>
             <tr className="bg-gray-700">
-              <th className="p-2 border border-gray-600">Injury</th>
-              <th className="p-2 border border-gray-600">Severity</th>
-              <th className="p-2 border border-gray-600">Recovery Time</th>
-              <th className="p-2 border border-gray-600">Date</th>
+              <th className="p-2 border border-gray-600 text-lg">Injury</th>
+              <th className="p-2 border border-gray-600 text-lg">Severity</th>
+              <th className="p-2 border border-gray-600 text-lg">Recovery Time</th>
+              <th className="p-2 border border-gray-600 text-lg">Date</th>
             </tr>
           </thead>
           <tbody>
             {athleteData.injuryHistory.map((injury, index) => (
               <tr key={index} className="hover:bg-gray-600">
-                <td className="p-2 border border-gray-600">{injury.injury || 'Unknown'}</td>
-                <td className="p-2 border border-gray-600">{injury.severity || 'N/A'}</td>
-                <td className="p-2 border border-gray-600">{injury.recoveryTime || 'N/A'}</td>
-                <td className="p-2 border border-gray-600">{injury.date ? new Date(injury.date).toLocaleDateString() : 'N/A'}</td>
+                <td className="p-2 border border-gray-600 text-base">{injury.injury || 'Unknown'}</td>
+                <td className="p-2 border border-gray-600 text-base">{injury.severity || 'N/A'}</td>
+                <td className="p-2 border border-gray-600 text-base">{injury.recoveryTime || 'N/A'}</td>
+                <td className="p-2 border border-gray-600 text-base">{injury.date ? new Date(injury.date).toLocaleDateString() : 'N/A'}</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p className="mt-2">No detailed injury history available.</p>
+        <p className="mt-2 text-lg">No detailed injury history available.</p>
       )}
       {injuryPrediction ? (
         <div className="mt-4">
           {calculatedRecoveryScore !== null && (
-            <p className="mt-2">
+            <p className="mt-2 text-lg">
               <strong>Recovery Score:</strong>{' '}
               <span className={calculatedRecoveryScore < 30 ? 'text-red-400' : calculatedRecoveryScore < 50 ? 'text-yellow-400' : 'text-green-400'}>
                 {calculatedRecoveryScore.toFixed(1)}
@@ -280,7 +284,7 @@ function InjuryPreventionPage() {
               {calculatedRecoveryScore < 30 ? '(Poor recovery)' : calculatedRecoveryScore < 50 ? '(Low recovery)' : '(Adequate recovery)'}
             </p>
           )}
-          <p className="mt-2">
+          <p className="mt-2 text-lg">
             <strong>Injury Risk:</strong>{' '}
             <span
               className={
@@ -295,14 +299,14 @@ function InjuryPreventionPage() {
             </span>
             {injuryPrediction.predictionScore && ` (${Math.round(injuryPrediction.predictionScore * 100)}%)`}
           </p>
-          {injuryPreventionSuggestion && <p className="mt-2 text-orange-400">{injuryPreventionSuggestion}</p>}
+          {injuryPreventionSuggestion && <p className="mt-2 text-lg text-orange-400">{injuryPreventionSuggestion}</p>}
         </div>
       ) : (
-        <p className="mt-2">No injury prediction available.</p>
+        <p className="mt-2 text-lg">No injury prediction available.</p>
       )}
       <button
         onClick={() => navigate(`/athlete/${id}`)}
-        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-lg"
       >
         Back to Athlete Dashboard
       </button>
