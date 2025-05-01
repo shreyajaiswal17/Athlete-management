@@ -176,9 +176,9 @@ function TrainingSchedulePage() {
               <li key={index} className="bg-[#001F3F]/50 p-4 rounded-lg border border-gray-600 hover:shadow-md transition-all">
                 <h3 className="text-lg font-semibold mb-1 text-white">{day.day}</h3>
                 <p className="text-sm text-gray-200">
-                  <span className="font-medium text-blue-300">Type:</span> {day.trainingType}
+                  <span className="text-lg font-bold text-blue-50">Type:</span> {day.trainingType}
                 </p>
-                <p className="text-sm text-gray-300 mt-1">{day.details}</p>
+                <p className="text-xl text-gray-300 mt-1">{day.details}</p>
               </li>
             ))}
           </ul>

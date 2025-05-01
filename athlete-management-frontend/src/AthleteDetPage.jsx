@@ -78,37 +78,32 @@ function AthleteDetailPage() {
       <TrainingSchedulePage />
       <MealPlan />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-14">
-        <button
-          onClick={() => navigate(`/athlete/${id}/injury`)}
-          className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-4 rounded-xl shadow-lg transition"
-        >
-          🛡️ Injury Prevention
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-14">
+        
         <button
           onClick={() => navigate(`/athlete/${id}/career`)}
-          className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-4 rounded-xl shadow-lg transition"
+          className="bg-white/10 backdrop-blur-md  hover:bg-blue-800 text-white font-semibold px-6 py-4 rounded-xl shadow-lg transition"
         >
           🎓 Career Guidance
         </button>
         <button
           onClick={() => navigate(`/athlete/${id}/financial`)}
-          className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-6 py-4 rounded-xl shadow-lg transition"
+          className="bg-white/10 backdrop-blur-md  hover:bg-blue-800 text-white font-semibold px-6 py-4 rounded-xl shadow-lg transition"
         >
           💰 Financial Planning
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between gap-6 mt-14">
+      <div className="flex flex-col sm:flex-row justify-center gap-6 mt-14">
         <button
           onClick={() => navigate('/dashboard')}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow transition"
+          className="w-full sm:w-auto bg-white/10 backdrop-blur-md  hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow transition"
         >
           ← Back to Dashboard
         </button>
         <button
           onClick={() => navigate(`/performanceupdate/${id}`)}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow transition"
+          className="w-full sm:w-auto bg-white/10 backdrop-blur-md  hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow transition"
         >
           ✏️ Update Performance
         </button>
