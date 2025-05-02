@@ -798,7 +798,7 @@ useEffect(() => {
                     </p>
                     <p className="mt-2"><strong>Trend:</strong> {performanceAnalysis.trend}</p>
                     <p className="mt-2"><strong>Latest Metrics:</strong> {performanceSuggestion}</p>
-                    <h3 className="text-lg font-medium text-blue-400 mt-4">Optimization Recommendations</h3>
+                    <h3 className="text-lg font-medium text-teal-400 mt-4">Optimization Recommendations</h3>
                     <ul className="list-disc pl-5 mt-2">
                       {performanceAnalysis.recommendations.map((rec, index) => (
                         <li key={index} className="text-gray-300">{rec}</li>
@@ -826,7 +826,7 @@ useEffect(() => {
             <div className="p-4">
               <p className="mt-2">{trainingMetrics.insights.trainingLoad}</p>
               <div className="mt-4">
-                <h3 className="text-lg font-medium text-blue-400">Recommendations</h3>
+                <h3 className="text-lg font-medium text-teal-400">Recommendations</h3>
                 <ul className="list-disc pl-5 mt-2">
                   {trainingMetrics.recommendations.map((rec, index) => (
                     <li key={index} className="text-gray-300">

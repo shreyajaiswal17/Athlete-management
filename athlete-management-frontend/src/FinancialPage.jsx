@@ -174,7 +174,7 @@ function FinancialPlanningPage() {
             <Bar data={financialChartData} options={financialChartOptions} />
           </div>
           <div className="mt-4">
-            <h3 className="text-3xl font-medium text-blue-400">Probability Breakdown</h3>
+            <h3 className="text-3xl font-medium text-teal-400">Probability Breakdown</h3>
             <p className="mt-2 text-lg">
               Build Wealth: <span className="text-blue-400">{Math.round(financialPlanning.probabilities[0] * 100)}%</span>, 
               Stabilize Finances: <span className="text-yellow-400">{Math.round(financialPlanning.probabilities[1] * 100)}%</span>, 

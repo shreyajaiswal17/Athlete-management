@@ -217,7 +217,7 @@ function PerformanceTrendsPage() {
       title: { display: true, text: 'Performance Efficiency Over Time', color: '#fff' },
     },
     scales: {
-      y: { beginAtZero: true, max: 100, ticks: { color: '#fff' }, grid: { color: '#444' }, title: { display: true, text: 'Efficiency (%)', color: '#fff' } },
+      y: { beginAtZero: true, max: 100, ticks: { color: '#fff' }, grid: { color: '#444' }, title: { display: true, text: 'Efficiency (%)', color: '#26A69A' } },
       x: { ticks: { color: '#fff' }, grid: { color: '#444' } },
     },
   };
@@ -249,7 +249,7 @@ function PerformanceTrendsPage() {
             </p>
             <p className="mt-2"><strong>Trend:</strong> {performanceAnalysis.trend}</p>
             <p className="mt-2"><strong>Latest Metrics:</strong> {performanceSuggestion}</p>
-            <h3 className="text-2xl font-bold text-blue-400 mt-4">Optimization Recommendations</h3>
+            <h3 className="text-2xl font-bold text-teal-400 mt-4">Optimization Recommendations</h3>
             <ul className="list-disc pl-5 mt-2">
               {performanceAnalysis.recommendations.map((rec, index) => (
                 <li key={index} className="text-gray-300">{rec}</li>
